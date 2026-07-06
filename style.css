@@ -2764,3 +2764,101 @@ footer {
         font-size: 13px;  /* كانت 9px */
     }
 }
+
+@media (max-width: 768px) {
+    .properties-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    .card-images {
+        height: 180px !important;  /* تصغير الارتفاع */
+    }
+
+    .card-body {
+        padding: 10px !important;
+    }
+
+    .card-title {
+        font-size: 15px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .card-specs {
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .spec-item {
+        padding: 4px 6px !important;
+        font-size: 12px !important;
+    }
+
+    .card-price {
+        font-size: 18px !important;
+    }
+
+    .btn-more {
+        padding: 4px 12px !important;
+        font-size: 12px !important;
+    }
+
+    .card-stats {
+        gap: 4px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .card-views, .card-favs, .card-date {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
+    }
+
+    .card-location {
+        font-size: 12px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .card-code-wrapper .card-code {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
+    }
+
+    .card-footer {
+        padding-top: 6px !important;
+        flex-direction: row !important;  /* يخلي السعر والزر جنب بعض */
+        align-items: center !important;
+        gap: 6px !important;
+    }
+
+    .btn-more {
+        width: auto !important;  /* يرجع الزر لحجمه الطبيعي */
+    }
+}
+
+@media (max-width: 480px) {
+    .properties-grid {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .card-images {
+        height: 150px !important;
+    }
+
+    .card-body {
+        padding: 8px !important;
+    }
+
+    .card-title {
+        font-size: 14px !important;
+    }
+
+    .card-price {
+        font-size: 16px !important;
+    }
+
+    .btn-more {
+        font-size: 11px !important;
+        padding: 4px 10px !important;
+    }
+}
