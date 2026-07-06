@@ -1713,6 +1713,7 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
    RESPONSIVE - MOBILE FIRST
    ============================================ */
 
+
 /* Tablets and smaller desktops */
 @media (max-width: 1200px) {
     .hero-title-ar { font-size: 48px; }
@@ -1734,170 +1735,558 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
 }
 
 /* Mobile */
-@media (max-width: 768px) {
-    .container { padding: 0 20px; }
-    .header-wrapper { height: 75px; }
-    .logo-img { height: 40px; }
-    .logo-text { flex-direction: row; align-items: baseline; gap: 8px; }
-    .logo-ar { font-size: 18px; }
-    .logo-en { font-size: 11px; }
-    
-    .lang-switcher { padding: 2px; }
-    .lang-btn { padding: 4px 12px; font-size: 11px; }
-    html[dir="rtl"] .lang-switcher,
-    html[dir="ltr"] .lang-switcher { margin-left: 8px; margin-right: 8px; }
 
-    .hero {
-        background-attachment: scroll; /* إزالة التأثير الثابت على الجوال */
-        padding: 100px 0 60px;
-        background: 
-            linear-gradient(135deg, rgba(26, 20, 16, 0.88) 0%, rgba(26, 20, 16, 0.75) 100%),
-            url('https://res.cloudinary.com/dkdilpnuc/image/upload/v1783203152/king-houses-header-bg_h3klgm.webp') center/cover no-repeat;
+/* ============================================
+   RESPONSIVE FOR TABLETS & MOBILE (max-width: 768px)
+   ============================================ */
+   @media (max-width: 768px) {
+    /* ----- الحاوية العامة ----- */
+    .container {
+        padding: 0 15px !important;
     }
-    
+
+    /* ----- الهيدر ----- */
+    .header-wrapper {
+        height: 70px !important;
+        flex-wrap: nowrap !important;
+    }
+
+    .logo-img {
+        height: 35px !important;
+    }
+
+    .logo-ar {
+        font-size: 16px !important;
+    }
+
+    .logo-en {
+        font-size: 10px !important;
+    }
+
+    .logo-text {
+        flex-direction: row !important;
+        align-items: baseline !important;
+        gap: 6px !important;
+    }
+
+    /* ----- أزرار اللغة ----- */
+    .lang-switcher {
+        padding: 2px !important;
+    }
+
+    .lang-btn {
+        padding: 3px 10px !important;
+        font-size: 10px !important;
+    }
+
+    /* ----- القائمة (هامبرغر) ----- */
     nav {
-        position: fixed;
-        top: 75px;
-        left: -100%;
-        width: 80%;
-        height: calc(100vh - 75px);
-        background: var(--white);
-        box-shadow: var(--shadow-lg);
-        transition: var(--transition);
-        z-index: 999;
+        position: fixed !important;
+        top: 70px !important;
+        left: -100% !important;
+        width: 80% !important;
+        height: calc(100vh - 70px) !important;
+        background: var(--white) !important;
+        box-shadow: var(--shadow-lg) !important;
+        transition: var(--transition) !important;
+        z-index: 999 !important;
     }
-    nav.mobile-open { left: 0; }
-    nav ul { flex-direction: column; padding: 30px; gap: 20px; }
-    .hamburger { display: flex; }
-    
-    .filters-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: var(--secondary);
-        border: none;
-        padding: 12px 20px;
-        border-radius: 50px;
-        font-size: 14px;
-        font-weight: 700;
-        cursor: pointer;
-        width: auto;
-        min-width: 140px;
-        box-shadow: var(--shadow-gold);
+
+    nav.mobile-open {
+        left: 0 !important;
     }
-    .filters-wrapper { display: none; }
-    .filters-wrapper.show { display: block; }
-    .filters-grid { grid-template-columns: 1fr; gap: 12px; }
-    .filter-group label { font-size: 13px; }
-    .filter-select, .filter-input { padding: 10px; font-size: 14px; }
-    .filters-actions button { padding: 8px 16px; font-size: 12px; }
-    
-    .properties-grid { grid-template-columns: 1fr; gap: 20px; }
-    .properties-section { padding: 30px 0; }
-    .section-header { margin-bottom: 30px; margin-top: 30px; }
-    .section-title { font-size: 28px; }
-    
-    .hero { padding: 100px 0 60px; }
-    .hero-title-ar { font-size: 28px; }
-    .hero-title-en { font-size: 14px; }
-    .hero-description { font-size: 13px; }
-    .hero-stats { gap: 15px; flex-wrap: wrap; justify-content: center; }
-    .stat-card { min-width: 80px; padding: 5px; }
-    .stat-number { font-size: 22px; }
-    .stat-label { font-size: 9px; white-space: nowrap; }
-    
-    .card-images { height: 200px; }
-    .card-body { padding: 12px; }
-    .card-title { font-size: 16px; }
-    .card-price { font-size: 24px; }
-    .btn-more { padding: 6px 12px; font-size: 12px; }
-    
-    .footer-grid {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
+
+    nav ul {
+        flex-direction: column !important;
+        padding: 25px !important;
+        gap: 18px !important;
     }
-    .footer-about,
-    .footer-links:first-of-type,
-    .footer-links:nth-child(3),
-    .footer-contact {
-        width: 100%;
-        text-align: center;
-        order: unset;
+
+    nav ul li a {
+        font-size: 16px !important;
     }
-    .footer-links:first-of-type,
-    .footer-links:nth-child(3) {
-        margin-top: 0;
+
+    .hamburger {
+        display: flex !important;
     }
-    .footer-social {
+
+    /* ----- الهيرو ----- */
+    .hero {
+        padding: 80px 0 50px !important;
+        background-attachment: scroll !important;
+        min-height: auto !important;
+    }
+
+    .hero-content {
+        grid-template-columns: 1fr !important;
+        gap: 30px !important;
+    }
+
+    .hero-text {
+        text-align: center !important;
+    }
+
+    .hero-title-ar {
+        font-size: 28px !important;
+    }
+
+    .hero-title-en {
+        font-size: 14px !important;
+    }
+
+    .hero-description {
+        font-size: 14px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        max-width: 100% !important;
+    }
+
+    .hero-badge {
+        padding: 6px 16px !important;
+        font-size: 13px !important;
+        margin-bottom: 15px !important;
+    }
+
+    .hero-badge span {
+        font-size: 13px !important;
+    }
+
+    .hero-search-input {
+        padding: 12px 45px 12px 15px !important;
+        font-size: 14px !important;
+    }
+
+    .btn-outline {
+        padding: 10px 20px !important;
+        font-size: 14px !important;
+        margin-top: 10px !important;
+    }
+
+    .hero-stats {
+        gap: 15px !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        padding-top: 20px !important;
+    }
+
+    .stat-card {
+        min-width: 70px !important;
+        padding: 5px !important;
+    }
+
+    .stat-number {
+        font-size: 22px !important;
+    }
+
+    .stat-label {
+        font-size: 10px !important;
+        white-space: nowrap !important;
+    }
+
+    .hero-scroll {
+        bottom: 15px !important;
+    }
+
+    .hero-scroll span {
+        font-size: 12px !important;
+    }
+
+    /* ----- الفلاتر ----- */
+    .filters-header {
+        flex-wrap: wrap !important;
+        gap: 10px !important;
         justify-content: center !important;
     }
-    .footer-links h4 {
-        font-size: 13px;
-        margin-bottom: 8px;
-        padding-bottom: 6px;
-    }
-    .footer-links h4::after {
-        width: 25px;
-        height: 2px;
-        right: 50%;
-        transform: translateX(50%);
-    }
-    .footer-links ul li { margin-bottom: 6px; }
-    .footer-links ul li a { font-size: 11px; }
-    .footer-logo .logo-img { height: 80px; }
-    .footer-logo .logo-ar { font-size: 30px; color: var(--white) !important; }
-    .footer-logo .logo-en { font-size: 20px; color: var(--primary) !important; }
-    .footer-logo { justify-content: center; }
-    .footer-logo div { align-items: center; }
-    .footer-description {
-        font-size: 11px;
-        margin-bottom: 12px;
-        text-align: center;
-    }
-    .footer-social { justify-content: center; }
-    .social-link { width: 34px; height: 34px; font-size: 15px; }
-    .footer-social { gap: 10px; }
-    .footer-contact-btn { padding: 8px 16px; font-size: 12px; margin-top: 10px; }
-    .footer-bottom { flex-direction: column; align-items: center; gap: 8px; font-size: 11px; }
 
-    .footer-social {
-        display: flex;
-        gap: 12px;
-        justify-content: flex-start;
-        margin-top: 15px;
-        flex-wrap: nowrap;
+    .filters-title h3 {
+        font-size: 17px !important;
+    }
+
+    .filters-toggle {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        background: var(--primary) !important;
+        color: var(--white) !important;
+        border: none !important;
+        padding: 10px 18px !important;
+        border-radius: 30px !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        cursor: pointer !important;
+        box-shadow: var(--shadow-gold) !important;
+    }
+
+    .filters-wrapper {
+        display: none !important;
+        padding-bottom: 15px !important;
+    }
+
+    .filters-wrapper.show {
+        display: block !important;
+    }
+
+    .filters-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .filter-group label {
+        font-size: 13px !important;
+    }
+
+    .filter-select,
+    .filter-input {
+        padding: 10px !important;
+        font-size: 14px !important;
+    }
+
+    .filters-actions {
+        gap: 8px !important;
+        margin-top: 15px !important;
+    }
+
+    .filters-actions button {
+        padding: 8px 14px !important;
+        font-size: 12px !important;
+    }
+
+    /* ===== قسم العقارات ===== */
+    .properties-section {
+        padding: 20px 0 !important;
+    }
+
+    .section-header {
+        margin-bottom: 20px !important;
+        margin-top: 20px !important;
+    }
+
+    .section-badge {
+        font-size: 12px !important;
+        padding: 4px 12px !important;
+    }
+
+    .section-title {
+        font-size: 24px !important;
+    }
+
+    .section-subtitle {
+        font-size: 14px !important;
+    }
+
+    .results-info {
+        font-size: 14px !important;
+    }
+
+    .results-info span:nth-child(2) {
+        font-size: 18px !important;
+    }
+
+    /* ===== شبكة العقارات (الأهم) ===== */
+    .properties-grid {
+        grid-template-columns: 1fr !important;
+        gap: 15px !important;
+    }
+
+    /* ===== بطاقة العقار ===== */
+    .card-images {
+        height: 180px !important;
+    }
+
+    .card-body {
+        padding: 12px !important;
+    }
+
+    .card-title {
+        font-size: 16px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .card-specs {
+        gap: 6px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .spec-item {
+        padding: 4px 8px !important;
+        font-size: 12px !important;
+    }
+
+    .spec-icon {
+        font-size: 14px !important;
+    }
+
+    .spec-value {
+        font-size: 13px !important;
+    }
+
+    .card-price {
+        font-size: 20px !important;
+    }
+
+    .card-price span {
+        font-size: 14px !important;
+    }
+
+    .card-footer {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding-top: 10px !important;
+    }
+
+    .btn-more {
+        padding: 6px 14px !important;
+        font-size: 13px !important;
+        width: auto !important;
+    }
+
+    .card-stats {
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .card-views,
+    .card-favs,
+    .card-date {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
+    }
+
+    .card-location {
+        font-size: 13px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .card-code-wrapper {
+        margin-bottom: 6px !important;
+    }
+
+    .card-code-wrapper .card-code {
+        font-size: 10px !important;
+        padding: 2px 10px !important;
+    }
+
+    .load-more {
+        margin-top: 30px !important;
+    }
+
+    .btn-load-more {
+        padding: 10px 30px !important;
+        font-size: 14px !important;
+    }
+
+    /* ===== الإحصائيات ===== */
+    .stats-section {
+        padding: 30px 0 !important;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 15px !important;
+    }
+
+    .stats-item {
+        padding: 10px !important;
+    }
+
+    .stats-icon {
+        font-size: 28px !important;
+        margin-bottom: 5px !important;
+    }
+
+    .stats-number {
+        font-size: 28px !important;
+        margin-bottom: 4px !important;
+    }
+
+    .stats-label {
+        font-size: 12px !important;
+    }
+
+    /* ===== الفوتر ===== */
+    footer {
+        padding: 30px 0 15px !important;
+    }
+
+    .footer-grid {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 20px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .footer-about,
+    .footer-links,
+    .footer-contact {
+        width: 100% !important;
+        text-align: center !important;
+        order: unset !important;
+    }
+
+    .footer-links h4 {
+        font-size: 15px !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 6px !important;
+    }
+
+    .footer-links h4::after {
+        right: 50% !important;
+        transform: translateX(50%) !important;
+        width: 30px !important;
+        height: 2px !important;
+    }
+
+    .footer-links ul li {
+        margin-bottom: 6px !important;
+    }
+
+    .footer-links ul li a {
+        font-size: 13px !important;
     }
 
     .footer-logo {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        justify-content: center;
-    }
-    .footer-logo div {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
+        justify-content: center !important;
+        gap: 10px !important;
+        margin-bottom: 5px !important;
     }
 
-    
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .stats-number { font-size: 28px; }
-    .stats-label { font-size: 12px; }
-    
-    .gallery-main { height: 300px; }
-    .property-header { flex-direction: column; gap: 10px; }
-    .property-actions { flex-direction: column; }
-    .form-row { grid-template-columns: 1fr; }
-    .phone-group { flex-direction: column; }
-    .phone-select { width: 100%; }
-    .specs-grid { grid-template-columns: 1fr; }
-    .spec-item-detail:last-child { grid-column: span 1; }
-    
+    .footer-logo .logo-img {
+        height: 60px !important;
+    }
+
+    .footer-logo .logo-ar {
+        font-size: 22px !important;
+    }
+
+    .footer-logo .logo-en {
+        font-size: 14px !important;
+    }
+
+    .footer-description {
+        font-size: 13px !important;
+        margin-bottom: 10px !important;
+        text-align: center !important;
+    }
+
+    .footer-social {
+        justify-content: center !important;
+        gap: 10px !important;
+        margin-top: 10px !important;
+    }
+
+    .social-link {
+        width: 36px !important;
+        height: 36px !important;
+        min-width: 36px !important;
+        font-size: 16px !important;
+    }
+
+    .footer-contact h4 {
+        font-size: 15px !important;
+        margin-bottom: 8px !important;
+    }
+
+    .footer-contact-btn {
+        padding: 8px 18px !important;
+        font-size: 13px !important;
+        margin-top: 8px !important;
+    }
+
+    .footer-stats {
+        padding-top: 15px !important;
+        margin-top: 5px !important;
+    }
+
+    .footer-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+
+    .footer-stat-item {
+        padding: 6px 4px !important;
+        gap: 2px !important;
+    }
+
+    .footer-stat-item i {
+        font-size: 20px !important;
+    }
+
+    .footer-stat-number {
+        font-size: 22px !important;
+    }
+
+    .footer-stat-label {
+        font-size: 11px !important;
+    }
+
+    .footer-bottom {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding-top: 15px !important;
+        font-size: 12px !important;
+    }
+
+    /* ===== المودالات ===== */
+    .modal-container {
+        width: 95% !important;
+        padding: 15px !important;
+    }
+
+    .modal-large {
+        max-width: 95% !important;
+    }
+
+    .modal-header {
+        padding: 10px 15px !important;
+    }
+
+    .modal-title h3 {
+        font-size: 18px !important;
+    }
+
+    .modal-body {
+        padding: 15px !important;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .phone-group {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .phone-select {
+        width: 100% !important;
+    }
+
+    .gallery-main {
+        height: 250px !important;
+    }
+
+    .property-header {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    .property-actions {
+        flex-direction: column !important;
+    }
+
+    .specs-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .spec-item-detail:last-child {
+        grid-column: span 1 !important;
+    }
+
+    /* ===== البحث المنسدل ===== */
     .hero-search-dropdown {
         position: fixed !important;
         top: auto !important;
@@ -1908,95 +2297,35 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
         z-index: 999999 !important;
         margin-top: 5px !important;
     }
-    .hero-result-item { padding: 10px; gap: 8px; }
-    .hero-result-image { width: 45px; height: 45px; }
-    .hero-result-title { font-size: 13px; white-space: normal; }
-    
-    .floating-contact-btn { bottom: 20px; left: 20px; }
-    .floating-icon { width: 50px; height: 50px; }
-    .floating-icon i { font-size: 24px; }
-    .map-container { height: 200px; }
-    .map-open-btn { padding: 10px 20px; font-size: 14px; white-space: normal; }
-    .rent-period { font-size: 12px; }
 
-    .properties-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
+    .hero-result-item {
+        padding: 10px !important;
+        gap: 8px !important;
     }
-    
-    .card-images {
-        height: 150px;
+
+    .hero-result-image {
+        width: 45px !important;
+        height: 45px !important;
     }
-    
-    .card-body {
-        padding: 10px;
+
+    .hero-result-title {
+        font-size: 13px !important;
+        white-space: normal !important;
     }
-    
-    .card-title {
-        font-size: 14px;
-        margin-bottom: 6px;
+
+    /* ===== الزر العائم ===== */
+    .floating-contact-btn {
+        bottom: 15px !important;
+        left: 15px !important;
     }
-    
-    .card-price {
-        font-size: 18px;
+
+    .floating-icon {
+        width: 50px !important;
+        height: 50px !important;
     }
-    
-    .card-specs {
-        gap: 8px;
-        margin-bottom: 10px;
-    }
-    
-    .spec-item {
-        padding: 6px 4px;
-    }
-    
-    .spec-value {
-        font-size: 13px;
-    }
-    
-    .spec-icon {
-        font-size: 14px;
-    }
-    
-    .btn-more {
-        padding: 4px 10px;
-        font-size: 11px;
-    }
-    
-    .card-stats {
-        gap: 6px;
-        margin-bottom: 6px;
-    }
-    
-    .card-views, .card-favs, .card-date {
-        font-size: 10px;
-        padding: 2px 6px;
-    }
-    
-    .card-location {
-        font-size: 12px;
-        margin-bottom: 4px;
-    }
-    
-    .card-code-wrapper .card-code {
-        font-size: 10px;
-        padding: 2px 10px;
-    }
-    
-    .card-code-wrapper {
-        margin-bottom: 6px;
-    }
-    
-    .card-footer {
-        padding-top: 8px;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 8px;
-    }
-    
-    .btn-more {
-        width: 100%;
-        justify-content: center;
+
+    .floating-icon i {
+        font-size: 22px !important;
     }
 }
 
@@ -2140,21 +2469,6 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
     text-decoration: none !important;
 }
 
-@media (max-width: 768px) {
-    .footer-social {
-        justify-content: center !important;
-    }
-    .social-link {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px !important;
-    }
-
-    .card-code-wrapper .card-code {
-        font-size: 12px;
-        padding: 3px 12px;
-    }
-}
 
 /* ============================================
    FOOTER - UPDATED
@@ -2243,47 +2557,6 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
 .social-link.instagram:hover { background: linear-gradient(135deg, #f09433, #d62976, #962fbf); color: white; }
 .social-link.telegram:hover { background: #0088cc; color: white; }
 
-/* للجوال */
-@media (max-width: 768px) {
-    .footer-grid {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 20px;
-    }
-    .footer-about,
-    .footer-links:first-of-type,
-    .footer-links:nth-child(3),
-    .footer-contact {
-        width: 100%;
-        text-align: center;
-        order: unset;
-    }
-    .footer-logo {
-        justify-content: center;
-    }
-    .footer-logo div {
-        align-items: center;
-    }
-    .footer-logo .logo-img {
-        height: 60px;
-    }
-    .footer-logo .logo-ar {
-        font-size: 22px;
-    }
-    .footer-logo .logo-en {
-        font-size: 14px;
-    }
-    .footer-social {
-        justify-content: center !important;
-    }
-    .social-link {
-        width: 38px !important;
-        height: 38px !important;
-        min-width: 38px !important;
-        font-size: 17px;
-    }
-}
 
 /* ===== تحسينات البطاقات ===== */
 .property-card {
@@ -2541,34 +2814,7 @@ footer {
 }
 
 /* للجوال */
-@media (max-width: 768px) {
-    .stats-section {
-        padding: 25px 0;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .stats-item {
-        padding: 8px;
-    }
-    
-    .stats-icon {
-        font-size: 24px;
-        margin-bottom: 4px;
-    }
-    
-    .stats-number {
-        font-size: 24px;
-        margin-bottom: 2px;
-    }
-    
-    .stats-label {
-        font-size: 11px;
-    }
-}
+
 
 @media (max-width: 480px) {
     .stats-section {
@@ -2652,34 +2898,6 @@ footer {
 }
 
 /* للجوال */
-@media (max-width: 768px) {
-    .footer-stats {
-        padding-top: 15px;
-        margin-top: 5px;
-    }
-    
-    .footer-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .footer-stat-item {
-        padding: 6px 4px;
-        gap: 2px;
-    }
-    
-    .footer-stat-item i {
-        font-size: 24px;
-    }
-    
-    .footer-stat-number {
-        font-size: 25px;
-    }
-    
-    .footer-stat-label {
-        font-size: 15px;
-    }
-}
 
 @media (max-width: 480px) {
     .footer-stats-grid {
@@ -2765,79 +2983,9 @@ footer {
     }
 }
 
-@media (max-width: 768px) {
-    .properties-grid {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-    }
-
-    .card-images {
-        height: 180px !important;  /* تصغير الارتفاع */
-    }
-
-    .card-body {
-        padding: 10px !important;
-    }
-
-    .card-title {
-        font-size: 15px !important;
-        margin-bottom: 4px !important;
-    }
-
-    .card-specs {
-        gap: 6px !important;
-        margin-bottom: 6px !important;
-    }
-
-    .spec-item {
-        padding: 4px 6px !important;
-        font-size: 12px !important;
-    }
-
-    .card-price {
-        font-size: 18px !important;
-    }
-
-    .btn-more {
-        padding: 4px 12px !important;
-        font-size: 12px !important;
-    }
-
-    .card-stats {
-        gap: 4px !important;
-        margin-bottom: 4px !important;
-    }
-
-    .card-views, .card-favs, .card-date {
-        font-size: 10px !important;
-        padding: 2px 6px !important;
-    }
-
-    .card-location {
-        font-size: 12px !important;
-        margin-bottom: 2px !important;
-    }
-
-    .card-code-wrapper .card-code {
-        font-size: 10px !important;
-        padding: 2px 8px !important;
-    }
-
-    .card-footer {
-        padding-top: 6px !important;
-        flex-direction: row !important;  /* يخلي السعر والزر جنب بعض */
-        align-items: center !important;
-        gap: 6px !important;
-    }
-
-    .btn-more {
-        width: auto !important;  /* يرجع الزر لحجمه الطبيعي */
-    }
-}
 
 @media (max-width: 480px) {
     .properties-grid {
-        grid-template-columns: 1fr !important;
         gap: 12px !important;
     }
 
