@@ -593,7 +593,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
 /* Property Grid */
 .properties-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
 }
 
@@ -618,7 +618,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
 .card-images {
     position: relative;
     width: 100%;
-    height: 220px;
+    height: 200px;
     overflow: hidden;
 }
 .card-images img {
@@ -651,7 +651,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
     color: var(--primary);
     padding: 4px 14px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 8px;
     font-weight: 700;
     border: 1px solid rgba(201,168,76,0.2);
     letter-spacing: 0.5px;
@@ -737,6 +737,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
     gap: 12px;
     margin-bottom: 10px;
     flex-wrap: wrap;
+    align-items: center;
 }
 .card-views,
 .card-favs,
@@ -765,7 +766,7 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
 .card-location i { color: var(--primary); }
 .card-title {
     font-size: 20px;
-    font-weight: 700;
+    font-weight: 800;
     margin-bottom: 12px;
     color: var(--secondary);
 }
@@ -804,22 +805,23 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
     font-weight: 800;
     color: var(--primary);
 }
-.card-price span { font-size: 18px; font-weight: 700; }
+.card-price span { font-size: 20px; font-weight: 700; }
 .btn-more {
     background: var(--primary);
     color: var(--secondary);
     border: none;
-    padding: 10px 22px;
+    padding: 12px 28px;
     border-radius: 30px;
     cursor: pointer;
     font-weight: 700;
-    font-size: 15px;
+    font-size: 22px;
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
     gap: 8px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
 }
+
 .btn-more:hover {
     background: var(--primary-dark);
     transform: translateY(-2px);
@@ -869,17 +871,17 @@ html[dir="ltr"] .lang-btn:last-child { border-radius: 0 40px 40px 0; }
 
 /* ===== حاوية كود العقار ===== */
 .card-code-wrapper {
-    margin-bottom: 12px;
-    display: flex;
+    display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    margin-left: 10px;
 }
 
 .card-code-wrapper .card-code {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: rgba(201,168,76,0.12);
+    background: rgba(201,168,76,0.15);
     color: var(--primary);
     padding: 4px 14px;
     border-radius: 20px;
@@ -1436,9 +1438,211 @@ textarea.form-input {
 }
 
 /* ============================================
-   FLOATING BUTTON
+   CONTACT MODAL - SIMPLE VERSION
    ============================================ */
-.floating-contact-btn {
+
+   .modal-container.modal-contact {
+    max-width: 480px;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.contact-simple-body {
+    padding: 20px 25px 30px !important;
+    text-align: center;
+}
+
+/* الترحيب */
+.contact-welcome {
+    margin-bottom: 20px;
+}
+
+.welcome-text {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--secondary);
+    margin-bottom: 5px;
+}
+
+.welcome-sub {
+    font-size: 14px;
+    color: var(--gray);
+}
+
+/* بطاقة رقم الهاتف */
+.phone-display-card {
+    background: linear-gradient(135deg, #1A1410, #2C2218);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--primary);
+}
+
+.phone-number-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.whatsapp-icon {
+    font-size: 28px;
+    color: #25D366;
+}
+
+.phone-number {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--white);
+    direction: ltr;
+    letter-spacing: 0.5px;
+}
+
+.copy-phone-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--white);
+    padding: 6px 16px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.copy-phone-btn:hover {
+    background: var(--primary);
+    color: var(--secondary);
+    transform: scale(1.05);
+}
+
+.copy-phone-btn.copied {
+    background: #27ae60;
+    color: white;
+}
+
+.phone-hint {
+    margin-top: 12px;
+    color: rgba(255,255,255,0.6);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+/* قسم QR */
+.qr-section {
+    margin-bottom: 20px;
+}
+
+.qr-container {
+    display: inline-block;
+    background: var(--white);
+    padding: 15px;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid #eee;
+}
+
+.qr-code {
+    width: 160px;
+    height: 160px;
+    display: block;
+    margin: 0 auto;
+}
+
+.qr-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--gray);
+}
+
+.qr-label i {
+    color: var(--primary);
+}
+
+/* زر واتساب الرئيسي */
+.whatsapp-main-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    background: #25D366;
+    color: var(--white);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    width: 100%;
+    box-shadow: 0 4px 15px rgba(37,211,102,0.3);
+}
+
+.whatsapp-main-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(37,211,102,0.4);
+    color: var(--white);
+}
+
+.whatsapp-main-btn i {
+    font-size: 24px;
+}
+
+/* تذييل المودال */
+.contact-footer-msg {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--gray);
+}
+
+/* ===== استجابة للجوال ===== */
+@media (max-width: 480px) {
+    .modal-container.modal-contact {
+        max-width: 95%;
+    }
+    
+    .phone-number {
+        font-size: 20px;
+    }
+    
+    .qr-code {
+        width: 130px;
+        height: 130px;
+    }
+    
+    .whatsapp-main-btn {
+        font-size: 15px;
+        padding: 12px 20px;
+    }
+    
+    .welcome-text {
+        font-size: 17px;
+    }
+}
+
+/* ============================================
+   FLOATING BUTTON - GOLD WHATSAPP VERSION
+   ============================================ */
+
+   .floating-contact-btn {
     position: fixed;
     bottom: 30px;
     left: 30px;
@@ -1449,38 +1653,56 @@ textarea.form-input {
     justify-content: center;
     animation: floatAnim 2s ease-in-out infinite;
 }
+
 .floating-icon {
     width: 65px;
     height: 65px;
-    background: linear-gradient(135deg, #C9A84C, #1A1410);
+    background: linear-gradient(145deg, #1A1410, #2C2218);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     box-shadow: 0 8px 25px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
-    border: 2px solid #C9A84C;
+    border: 2px solid var(--primary);
     position: relative;
 }
-.floating-icon i {
-    font-size: 30px;
-    color: #C9A84C;
+
+.whatsapp-float-icon {
+    font-size: 38px;
+    color: var(--primary);
     transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 8px rgba(201, 168, 76, 0.3));
 }
+
+.floating-contact-btn:hover .floating-icon {
+    transform: scale(1.12);
+    box-shadow: 0 12px 35px rgba(201, 168, 76, 0.4);
+    border-color: var(--primary-light);
+    background: linear-gradient(145deg, #2C2218, #1A1410);
+}
+
+.floating-contact-btn:hover .whatsapp-float-icon {
+    color: var(--primary-light);
+    transform: scale(1.05);
+    filter: drop-shadow(0 2px 12px rgba(201, 168, 76, 0.5));
+}
+
 .floating-pulse {
     position: absolute;
     width: 65px;
     height: 65px;
-    background: rgba(201,168,76,0.4);
+    background: rgba(201, 168, 76, 0.3);
     border-radius: 50%;
-    animation: pulse 1.8s ease-out infinite;
+    animation: pulseGold 1.8s ease-out infinite;
     z-index: -1;
 }
+
 .floating-tooltip {
     position: absolute;
     right: 80px;
     background: #1A1410;
-    color: #C9A84C;
+    color: var(--primary);
     padding: 8px 18px;
     border-radius: 40px;
     font-size: 14px;
@@ -1490,9 +1712,10 @@ textarea.form-input {
     visibility: hidden;
     transition: all 0.3s ease;
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    border-right: 3px solid #C9A84C;
+    border-right: 3px solid var(--primary);
     font-family: 'Cairo', sans-serif;
 }
+
 .floating-tooltip::before {
     content: '';
     position: absolute;
@@ -1503,32 +1726,53 @@ textarea.form-input {
     border-style: solid;
     border-color: transparent #1A1410 transparent transparent;
 }
-.floating-contact-btn:hover .floating-icon {
-    transform: scale(1.1);
-    box-shadow: 0 12px 30px rgba(201,168,76,0.5);
-    background: linear-gradient(135deg, #1A1410, #C9A84C);
-}
-.floating-contact-btn:hover .floating-icon i {
-    color: #FFFFFF;
-    transform: scale(1.05);
-}
+
 .floating-contact-btn:hover .floating-tooltip {
     opacity: 1;
     visibility: visible;
     right: 90px;
 }
+
 .floating-contact-btn:hover .floating-pulse {
     animation: none;
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); opacity: 0.8; }
+@keyframes pulseGold {
+    0% { transform: scale(1); opacity: 0.6; }
     70% { transform: scale(1.5); opacity: 0; }
     100% { transform: scale(1.8); opacity: 0; }
 }
+
 @keyframes floatAnim {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-8px); }
+}
+
+/* ===== استجابة للجوال ===== */
+@media (max-width: 768px) {
+    .floating-contact-btn { 
+        bottom: 15px; 
+        left: 15px; 
+    }
+    .floating-icon { 
+        width: 50px; 
+        height: 50px; 
+    }
+    .whatsapp-float-icon {
+        font-size: 28px;
+    }
+    .floating-pulse {
+        width: 50px;
+        height: 50px;
+    }
+    .floating-tooltip {
+        font-size: 12px;
+        padding: 5px 12px;
+        right: 60px;
+    }
+    .floating-contact-btn:hover .floating-tooltip {
+        right: 65px;
+    }
 }
 
 /* ============================================
@@ -1709,6 +1953,8 @@ html[dir="ltr"] .card-location i,
 html[dir="ltr"] .btn-more i { margin-left: 0; margin-right: 8px; }
 html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
 
+
+
 /* ============================================
    RESPONSIVE - MOBILE FIRST
    ============================================ */
@@ -1717,11 +1963,9 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
 /* Tablets and smaller desktops */
 @media (max-width: 1200px) {
     .hero-title-ar { font-size: 48px; }
-    .properties-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-    .card-images { height: 200px; }
     .properties-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 18px;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 18px !important;
     }
 }
 
@@ -1740,46 +1984,15 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
    RESPONSIVE FOR TABLETS & MOBILE (max-width: 768px)
    ============================================ */
    @media (max-width: 768px) {
-    /* ----- الحاوية العامة ----- */
-    .container {
-        padding: 0 15px !important;
-    }
+    .container { padding: 0 15px !important; }
+    .header-wrapper { height: 70px !important; flex-wrap: nowrap !important; }
+    .logo-img { height: 35px !important; }
+    .logo-ar { font-size: 16px !important; }
+    .logo-en { font-size: 10px !important; }
+    .logo-text { flex-direction: row !important; align-items: baseline !important; gap: 6px !important; }
+    .lang-switcher { padding: 2px !important; }
+    .lang-btn { padding: 3px 10px !important; font-size: 10px !important; }
 
-    /* ----- الهيدر ----- */
-    .header-wrapper {
-        height: 70px !important;
-        flex-wrap: nowrap !important;
-    }
-
-    .logo-img {
-        height: 35px !important;
-    }
-
-    .logo-ar {
-        font-size: 16px !important;
-    }
-
-    .logo-en {
-        font-size: 10px !important;
-    }
-
-    .logo-text {
-        flex-direction: row !important;
-        align-items: baseline !important;
-        gap: 6px !important;
-    }
-
-    /* ----- أزرار اللغة ----- */
-    .lang-switcher {
-        padding: 2px !important;
-    }
-
-    .lang-btn {
-        padding: 3px 10px !important;
-        font-size: 10px !important;
-    }
-
-    /* ----- القائمة (هامبرغر) ----- */
     nav {
         position: fixed !important;
         top: 70px !important;
@@ -1791,117 +2004,34 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
         transition: var(--transition) !important;
         z-index: 999 !important;
     }
+    nav.mobile-open { left: 0 !important; }
+    nav ul { flex-direction: column !important; padding: 25px !important; gap: 18px !important; }
+    nav ul li a { font-size: 16px !important; }
+    .hamburger { display: flex !important; }
 
-    nav.mobile-open {
-        left: 0 !important;
-    }
-
-    nav ul {
-        flex-direction: column !important;
-        padding: 25px !important;
-        gap: 18px !important;
-    }
-
-    nav ul li a {
-        font-size: 16px !important;
-    }
-
-    .hamburger {
-        display: flex !important;
-    }
-
-    /* ----- الهيرو ----- */
     .hero {
         padding: 80px 0 50px !important;
         background-attachment: scroll !important;
         min-height: auto !important;
     }
+    .hero-content { grid-template-columns: 1fr !important; gap: 30px !important; }
+    .hero-text { text-align: center !important; }
+    .hero-title-ar { font-size: 28px !important; }
+    .hero-title-en { font-size: 14px !important; }
+    .hero-description { font-size: 14px !important; margin: 0 auto !important; max-width: 100% !important; }
+    .hero-badge { padding: 6px 16px !important; font-size: 13px !important; margin-bottom: 15px !important; }
+    .hero-badge span { font-size: 13px !important; }
+    .hero-search-input { padding: 12px 45px 12px 15px !important; font-size: 14px !important; }
+    .btn-outline { padding: 10px 20px !important; font-size: 14px !important; margin-top: 10px !important; }
+    .hero-stats { gap: 15px !important; flex-wrap: wrap !important; justify-content: center !important; padding-top: 20px !important; }
+    .stat-card { min-width: 70px !important; padding: 5px !important; }
+    .stat-number { font-size: 22px !important; }
+    .stat-label { font-size: 10px !important; white-space: nowrap !important; }
+    .hero-scroll { bottom: 15px !important; }
+    .hero-scroll span { font-size: 12px !important; }
 
-    .hero-content {
-        grid-template-columns: 1fr !important;
-        gap: 30px !important;
-    }
-
-    .hero-text {
-        text-align: center !important;
-    }
-
-    .hero-title-ar {
-        font-size: 28px !important;
-    }
-
-    .hero-title-en {
-        font-size: 14px !important;
-    }
-
-    .hero-description {
-        font-size: 14px !important;
-        margin-left: auto !important;
-        margin-right: auto !important;
-        max-width: 100% !important;
-    }
-
-    .hero-badge {
-        padding: 6px 16px !important;
-        font-size: 13px !important;
-        margin-bottom: 15px !important;
-    }
-
-    .hero-badge span {
-        font-size: 13px !important;
-    }
-
-    .hero-search-input {
-        padding: 12px 45px 12px 15px !important;
-        font-size: 14px !important;
-    }
-
-    .btn-outline {
-        padding: 10px 20px !important;
-        font-size: 14px !important;
-        margin-top: 10px !important;
-    }
-
-    .hero-stats {
-        gap: 15px !important;
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        padding-top: 20px !important;
-    }
-
-    .stat-card {
-        min-width: 70px !important;
-        padding: 5px !important;
-    }
-
-    .stat-number {
-        font-size: 22px !important;
-    }
-
-    .stat-label {
-        font-size: 10px !important;
-        white-space: nowrap !important;
-    }
-
-    .hero-scroll {
-        bottom: 15px !important;
-    }
-
-    .hero-scroll span {
-        font-size: 12px !important;
-    }
-
-    /* ----- الفلاتر ----- */
-    .filters-header {
-        flex-wrap: wrap !important;
-        gap: 10px !important;
-        justify-content: center !important;
-    }
-
-    .filters-title h3 {
-        font-size: 17px !important;
-    }
-
+    .filters-header { flex-wrap: wrap !important; gap: 10px !important; justify-content: center !important; }
+    .filters-title h3 { font-size: 17px !important; }
     .filters-toggle {
         display: flex !important;
         align-items: center !important;
@@ -1916,199 +2046,60 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
         cursor: pointer !important;
         box-shadow: var(--shadow-gold) !important;
     }
+    .filters-wrapper { display: none !important; padding-bottom: 15px !important; }
+    .filters-wrapper.show { display: block !important; }
+    .filters-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
+    .filter-group label { font-size: 13px !important; }
+    .filter-select, .filter-input { padding: 10px !important; font-size: 14px !important; }
+    .filters-actions { gap: 8px !important; margin-top: 15px !important; }
+    .filters-actions button { padding: 8px 14px !important; font-size: 12px !important; }
 
-    .filters-wrapper {
-        display: none !important;
-        padding-bottom: 15px !important;
-    }
+    .properties-section { padding: 20px 0 !important; }
+    .section-header { margin-bottom: 20px !important; margin-top: 20px !important; }
+    .section-badge { font-size: 12px !important; padding: 4px 12px !important; }
+    .section-title { font-size: 24px !important; }
+    .section-subtitle { font-size: 14px !important; }
+    .results-info { font-size: 14px !important; }
+    .results-info span:nth-child(2) { font-size: 18px !important; }
 
-    .filters-wrapper.show {
-        display: block !important;
-    }
+    .properties-grid { grid-template-columns: 1fr !important; gap: 15px !important; }
 
-    .filters-grid {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    .filter-group label {
-        font-size: 13px !important;
-    }
-
-    .filter-select,
-    .filter-input {
-        padding: 10px !important;
-        font-size: 14px !important;
-    }
-
-    .filters-actions {
-        gap: 8px !important;
-        margin-top: 15px !important;
-    }
-
-    .filters-actions button {
-        padding: 8px 14px !important;
-        font-size: 12px !important;
-    }
-
-    /* ===== قسم العقارات ===== */
-    .properties-section {
-        padding: 20px 0 !important;
-    }
-
-    .section-header {
-        margin-bottom: 20px !important;
-        margin-top: 20px !important;
-    }
-
-    .section-badge {
-        font-size: 12px !important;
-        padding: 4px 12px !important;
-    }
-
-    .section-title {
-        font-size: 24px !important;
-    }
-
-    .section-subtitle {
-        font-size: 14px !important;
-    }
-
-    .results-info {
-        font-size: 14px !important;
-    }
-
-    .results-info span:nth-child(2) {
-        font-size: 18px !important;
-    }
-
-    /* ===== شبكة العقارات (الأهم) ===== */
-    .properties-grid {
-        grid-template-columns: 1fr !important;
-        gap: 15px !important;
-    }
-
-    /* ===== بطاقة العقار ===== */
-    .card-images {
-        height: 180px !important;
-    }
-
-    .card-body {
-        padding: 12px !important;
-    }
-
-    .card-title {
-        font-size: 16px !important;
-        margin-bottom: 6px !important;
-    }
-
-    .card-specs {
-        gap: 6px !important;
-        margin-bottom: 8px !important;
-    }
-
-    .spec-item {
-        padding: 4px 8px !important;
-        font-size: 12px !important;
-    }
-
-    .spec-icon {
-        font-size: 14px !important;
-    }
-
-    .spec-value {
-        font-size: 13px !important;
-    }
-
-    .card-price {
-        font-size: 20px !important;
-    }
-
-    .card-price span {
-        font-size: 14px !important;
-    }
-
-    .card-footer {
-        flex-direction: row !important;
-        align-items: center !important;
-        gap: 10px !important;
-        padding-top: 10px !important;
-    }
-
-    .btn-more {
-        padding: 6px 14px !important;
-        font-size: 13px !important;
-        width: auto !important;
-    }
-
+    .card-images { height: 180px !important; }
+    .card-body { padding: 12px !important; }
+    .card-title { font-size: 16px !important; margin-bottom: 6px !important; }
+    .card-specs { gap: 6px !important; margin-bottom: 8px !important; }
+    .spec-item { padding: 4px 8px !important; font-size: 12px !important; }
+    .spec-icon { font-size: 14px !important; }
+    .spec-value { font-size: 13px !important; }
+    .card-price { font-size: 24px !important; }
+    .card-price span { font-size: 16px !important; }
+    .card-footer { flex-direction: row !important; align-items: center !important; gap: 10px !important; padding-top: 10px !important; }
+    .btn-more { padding: 8px 16px !important; font-size: 15px !important; width: auto !important; }
     .card-stats {
-        gap: 6px !important;
-        margin-bottom: 6px !important;
+        gap: 6px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+    }    
+    .card-views, .card-favs, .card-date {
+        font-size: 11px;
+        padding: 2px 8px;
     }
-
-    .card-views,
-    .card-favs,
-    .card-date {
-        font-size: 10px !important;
-        padding: 2px 8px !important;
-    }
-
-    .card-location {
-        font-size: 13px !important;
-        margin-bottom: 4px !important;
-    }
-
-    .card-code-wrapper {
-        margin-bottom: 6px !important;
-    }
-
+    .card-location { font-size: 13px !important; margin-bottom: 4px !important; }
+    .card-code-wrapper { margin-bottom: 6px !important; }
     .card-code-wrapper .card-code {
-        font-size: 10px !important;
-        padding: 2px 10px !important;
-    }
+        font-size: 11px;
+        padding: 2px 10px;
+    }    .load-more { margin-top: 30px !important; }
+    .btn-load-more { padding: 10px 30px !important; font-size: 14px !important; }
 
-    .load-more {
-        margin-top: 30px !important;
-    }
+    .stats-section { padding: 30px 0 !important; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 15px !important; }
+    .stats-item { padding: 10px !important; }
+    .stats-icon { font-size: 28px !important; margin-bottom: 5px !important; }
+    .stats-number { font-size: 28px !important; margin-bottom: 4px !important; }
+    .stats-label { font-size: 12px !important; }
 
-    .btn-load-more {
-        padding: 10px 30px !important;
-        font-size: 14px !important;
-    }
-
-    /* ===== الإحصائيات ===== */
-    .stats-section {
-        padding: 30px 0 !important;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 15px !important;
-    }
-
-    .stats-item {
-        padding: 10px !important;
-    }
-
-    .stats-icon {
-        font-size: 28px !important;
-        margin-bottom: 5px !important;
-    }
-
-    .stats-number {
-        font-size: 28px !important;
-        margin-bottom: 4px !important;
-    }
-
-    .stats-label {
-        font-size: 12px !important;
-    }
-
-    /* ===== الفوتر ===== */
-    footer {
-        padding: 30px 0 15px !important;
-    }
-
+    footer { padding: 30px 0 15px !important; }
     .footer-grid {
         display: flex !important;
         flex-direction: column !important;
@@ -2116,177 +2107,55 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
         gap: 20px !important;
         margin-bottom: 20px !important;
     }
-
-    .footer-about,
-    .footer-links,
-    .footer-contact {
+    .footer-about, .footer-links, .footer-contact {
         width: 100% !important;
         text-align: center !important;
         order: unset !important;
     }
-
     .footer-links h4 {
         font-size: 15px !important;
         margin-bottom: 10px !important;
         padding-bottom: 6px !important;
     }
-
     .footer-links h4::after {
         right: 50% !important;
         transform: translateX(50%) !important;
         width: 30px !important;
         height: 2px !important;
     }
+    .footer-links ul li { margin-bottom: 6px !important; }
+    .footer-links ul li a { font-size: 13px !important; }
+    .footer-logo { justify-content: center !important; gap: 10px !important; margin-bottom: 5px !important; }
+    .footer-logo .logo-img { height: 60px !important; }
+    .footer-logo .logo-ar { font-size: 22px !important; }
+    .footer-logo .logo-en { font-size: 14px !important; }
+    .footer-description { font-size: 13px !important; margin-bottom: 10px !important; text-align: center !important; }
+    .footer-social { justify-content: center !important; gap: 10px !important; margin-top: 10px !important; }
+    .social-link { width: 36px !important; height: 36px !important; min-width: 36px !important; font-size: 16px !important; }
+    .footer-contact h4 { font-size: 15px !important; margin-bottom: 8px !important; }
+    .footer-contact-btn { padding: 8px 18px !important; font-size: 13px !important; margin-top: 8px !important; }
+    .footer-stats { padding-top: 15px !important; margin-top: 5px !important; }
+    .footer-stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .footer-stat-item { padding: 6px 4px !important; gap: 2px !important; }
+    .footer-stat-item i { font-size: 20px !important; }
+    .footer-stat-number { font-size: 22px !important; }
+    .footer-stat-label { font-size: 11px !important; }
+    .footer-bottom { flex-direction: column !important; align-items: center !important; gap: 8px !important; padding-top: 15px !important; font-size: 12px !important; }
 
-    .footer-links ul li {
-        margin-bottom: 6px !important;
-    }
+    .modal-container { width: 95% !important; padding: 15px !important; }
+    .modal-large { max-width: 95% !important; }
+    .modal-header { padding: 10px 15px !important; }
+    .modal-title h3 { font-size: 18px !important; }
+    .modal-body { padding: 15px !important; }
+    .form-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+    .phone-group { flex-direction: column !important; gap: 10px !important; }
+    .phone-select { width: 100% !important; }
+    .gallery-main { height: 250px !important; }
+    .property-header { flex-direction: column !important; gap: 10px !important; }
+    .property-actions { flex-direction: column !important; }
+    .specs-grid { grid-template-columns: 1fr !important; }
+    .spec-item-detail:last-child { grid-column: span 1 !important; }
 
-    .footer-links ul li a {
-        font-size: 13px !important;
-    }
-
-    .footer-logo {
-        justify-content: center !important;
-        gap: 10px !important;
-        margin-bottom: 5px !important;
-    }
-
-    .footer-logo .logo-img {
-        height: 60px !important;
-    }
-
-    .footer-logo .logo-ar {
-        font-size: 22px !important;
-    }
-
-    .footer-logo .logo-en {
-        font-size: 14px !important;
-    }
-
-    .footer-description {
-        font-size: 13px !important;
-        margin-bottom: 10px !important;
-        text-align: center !important;
-    }
-
-    .footer-social {
-        justify-content: center !important;
-        gap: 10px !important;
-        margin-top: 10px !important;
-    }
-
-    .social-link {
-        width: 36px !important;
-        height: 36px !important;
-        min-width: 36px !important;
-        font-size: 16px !important;
-    }
-
-    .footer-contact h4 {
-        font-size: 15px !important;
-        margin-bottom: 8px !important;
-    }
-
-    .footer-contact-btn {
-        padding: 8px 18px !important;
-        font-size: 13px !important;
-        margin-top: 8px !important;
-    }
-
-    .footer-stats {
-        padding-top: 15px !important;
-        margin-top: 5px !important;
-    }
-
-    .footer-stats-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 10px !important;
-    }
-
-    .footer-stat-item {
-        padding: 6px 4px !important;
-        gap: 2px !important;
-    }
-
-    .footer-stat-item i {
-        font-size: 20px !important;
-    }
-
-    .footer-stat-number {
-        font-size: 22px !important;
-    }
-
-    .footer-stat-label {
-        font-size: 11px !important;
-    }
-
-    .footer-bottom {
-        flex-direction: column !important;
-        align-items: center !important;
-        gap: 8px !important;
-        padding-top: 15px !important;
-        font-size: 12px !important;
-    }
-
-    /* ===== المودالات ===== */
-    .modal-container {
-        width: 95% !important;
-        padding: 15px !important;
-    }
-
-    .modal-large {
-        max-width: 95% !important;
-    }
-
-    .modal-header {
-        padding: 10px 15px !important;
-    }
-
-    .modal-title h3 {
-        font-size: 18px !important;
-    }
-
-    .modal-body {
-        padding: 15px !important;
-    }
-
-    .form-row {
-        grid-template-columns: 1fr !important;
-        gap: 10px !important;
-    }
-
-    .phone-group {
-        flex-direction: column !important;
-        gap: 10px !important;
-    }
-
-    .phone-select {
-        width: 100% !important;
-    }
-
-    .gallery-main {
-        height: 250px !important;
-    }
-
-    .property-header {
-        flex-direction: column !important;
-        gap: 10px !important;
-    }
-
-    .property-actions {
-        flex-direction: column !important;
-    }
-
-    .specs-grid {
-        grid-template-columns: 1fr !important;
-    }
-
-    .spec-item-detail:last-child {
-        grid-column: span 1 !important;
-    }
-
-    /* ===== البحث المنسدل ===== */
     .hero-search-dropdown {
         position: fixed !important;
         top: auto !important;
@@ -2297,44 +2166,19 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
         z-index: 999999 !important;
         margin-top: 5px !important;
     }
+    .hero-result-item { padding: 10px !important; gap: 8px !important; }
+    .hero-result-image { width: 45px !important; height: 45px !important; }
+    .hero-result-title { font-size: 13px !important; white-space: normal !important; }
 
-    .hero-result-item {
-        padding: 10px !important;
-        gap: 8px !important;
-    }
-
-    .hero-result-image {
-        width: 45px !important;
-        height: 45px !important;
-    }
-
-    .hero-result-title {
-        font-size: 13px !important;
-        white-space: normal !important;
-    }
-
-    /* ===== الزر العائم ===== */
-    .floating-contact-btn {
-        bottom: 15px !important;
-        left: 15px !important;
-    }
-
-    .floating-icon {
-        width: 50px !important;
-        height: 50px !important;
-    }
-
-    .floating-icon i {
-        font-size: 22px !important;
-    }
+    .floating-contact-btn { bottom: 15px !important; left: 15px !important; }
+    .floating-icon { width: 50px !important; height: 50px !important; }
+    .floating-icon i { font-size: 22px !important; }
 }
 
 /* Small phones */
+
 @media (max-width: 480px) {
-    .preloader-logo {
-        width: 140px;
-        height: 140px;
-    }
+    .preloader-logo { width: 140px; height: 140px; }
     .hero-title-ar { font-size: 24px; }
     .section-title { font-size: 24px; }
     .card-price { font-size: 20px; }
@@ -2348,104 +2192,27 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
     .footer-links h4 { font-size: 12px; }
     .footer-links ul li a { font-size: 10px; }
     .footer-description { font-size: 10px; }
-    .properties-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 10px;
-    }
-    
-    .card-images {
-        height: 120px;
-    }
-    
-    .card-body {
-        padding: 8px;
-    }
-    
-    .card-title {
-        font-size: 12px;
-    }
-    
-    .card-price {
-        font-size: 15px;
-    }
-    
-    .spec-item {
-        padding: 4px 2px;
-    }
-    
-    .spec-value {
-        font-size: 11px;
-    }
-    
-    .btn-more {
-        font-size: 10px;
-        padding: 4px 8px;
-    }
 
-    footer {
-        padding: 20px 0 10px;
-    }
-    
-    .footer-grid {
-        gap: 10px;
-        margin-bottom: 10px;
-    }
-    
-    .footer-logo .logo-img {
-        height: 32px;
-    }
-    
-    .footer-logo .logo-ar {
-        font-size: 15px;
-    }
-    
-    .footer-logo .logo-en {
-        font-size: 10px;
-        letter-spacing: 1px;
-    }
-    
-    .footer-description {
-        font-size: 11px;
-        margin-bottom: 6px;
-    }
-    
-    .footer-links h4 {
-        font-size: 12px;
-        margin-bottom: 6px;
-        padding-bottom: 3px;
-    }
-    
-    .footer-links ul li {
-        margin-bottom: 3px;
-    }
-    
-    .footer-links ul li a {
-        font-size: 11px;
-    }
-    
-    .social-link {
-        width: 26px;
-        height: 26px;
-        min-width: 26px;
-        font-size: 11px;
-    }
-    
-    .footer-contact h4 {
-        font-size: 12px;
-        margin-bottom: 4px;
-    }
-    
-    .footer-contact-btn {
-        padding: 5px 12px;
-        font-size: 11px;
-        margin-top: 4px;
-    }
-    
-    .footer-bottom {
-        padding-top: 8px;
-        font-size: 9px;
-    }
+    .properties-grid { gap: 12px !important; }
+    .card-images { height: 150px !important; }
+    .card-body { padding: 8px !important; }
+    .card-title { font-size: 14px !important; }
+    .card-price { font-size: 16px !important; }
+    .btn-more { font-size: 11px !important; padding: 4px 10px !important; }
 
+    footer { padding: 20px 0 10px; }
+    .footer-grid { gap: 10px; margin-bottom: 10px; }
+    .footer-logo .logo-img { height: 32px; }
+    .footer-logo .logo-ar { font-size: 15px; }
+    .footer-logo .logo-en { font-size: 10px; letter-spacing: 1px; }
+    .footer-description { font-size: 11px; margin-bottom: 6px; }
+    .footer-links h4 { font-size: 12px; margin-bottom: 6px; padding-bottom: 3px; }
+    .footer-links ul li { margin-bottom: 3px; }
+    .footer-links ul li a { font-size: 11px; }
+    .social-link { width: 26px; height: 26px; min-width: 26px; font-size: 11px; }
+    .footer-contact h4 { font-size: 12px; margin-bottom: 4px; }
+    .footer-contact-btn { padding: 5px 12px; font-size: 11px; margin-top: 4px; }
+    .footer-bottom { padding-top: 8px; font-size: 9px; }
 }
 
 /* ===== إصلاح نهائي لأزرار التواصل الاجتماعي ===== */
@@ -2684,8 +2451,10 @@ html[dir="ltr"] .btn-more i { transform: rotate(180deg); }
 }
 
 /* أيقونات البطاقة */
-.card-views i, .card-favs i, .card-date i {
-    font-size: 11px;
+.card-views i,
+.card-favs i,
+.card-date i {
+    color: var(--primary);
 }
 
 /* ============================================
@@ -2813,35 +2582,6 @@ footer {
     opacity: 0.8;
 }
 
-/* للجوال */
-
-
-@media (max-width: 480px) {
-    .stats-section {
-        padding: 15px 0;
-    }
-    
-    .stats-grid {
-        gap: 6px;
-    }
-    
-    .stats-item {
-        padding: 5px;
-    }
-    
-    .stats-icon {
-        font-size: 18px;
-        margin-bottom: 2px;
-    }
-    
-    .stats-number {
-        font-size: 18px;
-    }
-    
-    .stats-label {
-        font-size: 9px;
-    }
-}
 
 /* ============================================
    FOOTER STATS - مدمج مع الفوتر
@@ -2897,32 +2637,6 @@ footer {
     font-weight: 500;
 }
 
-/* للجوال */
-
-@media (max-width: 480px) {
-    .footer-stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 6px;
-    }
-    
-    .footer-stat-item {
-        padding: 4px 2px;
-        border-radius: 6px;
-    }
-    
-    .footer-stat-item i {
-        font-size: 16px;
-    }
-    
-    .footer-stat-number {
-        font-size: 18px;
-    }
-    
-    .footer-stat-label {
-        font-size: 9px;
-    }
-}
-
 .footer-grid {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr 1.2fr;
@@ -2937,76 +2651,133 @@ footer {
     order: 5;
 }
 
-@media (max-width: 480px) {
-    .footer-logo .logo-ar {
-        font-size: 24px;  /* كانت 15px */
+/* ===== تصغير البطاقات للشاشات الكبيرة ===== */
+@media (min-width: 1025px) {
+    .card-images {
+        height: 160px !important;
     }
-
-    .footer-logo .logo-en {
-        font-size: 24px;  /* كانت 10px */
+    .card-body {
+        padding: 10px 12px !important;
     }
-
-    .footer-description {
-        font-size: 24px;  /* كانت 11px */
+    .card-title {
+        font-size: 15px !important;
+        margin-bottom: 4px !important;
     }
-
-    .footer-links h4 {
-        font-size: 16px;  /* كانت 12px */
+    .card-specs {
+        gap: 6px !important;
+        margin-bottom: 6px !important;
     }
-
-    .footer-links ul li a {
-        font-size: 16px;  /* كانت 11px */
+    .spec-item {
+        padding: 4px 8px !important;
+        font-size: 12px !important;
     }
-
-    .footer-contact h4 {
-        font-size: 17px;  /* كانت 12px */
+    .card-stats {
+        gap: 4px !important;
+        margin-bottom: 4px !important;
     }
-
-    .footer-contact-btn {
-        font-size: 16px;  /* كانت 11px */
+    .card-views, .card-favs, .card-date {
+        font-size: 10px !important;
+        padding: 2px 6px !important;
     }
-
-    .footer-stat-number {
-        font-size: 27px;  /* كانت 18px */
+    .card-location {
+        font-size: 12px !important;
+        margin-bottom: 2px !important;
     }
-
-    .footer-stat-label {
-        font-size: 15px;  /* كانت 9px */
+    .card-code-wrapper .card-code {
+        font-size: 10px !important;
+        padding: 2px 8px !important;
     }
-
-    .footer-stat-item i {
-        font-size: 23px;  /* كانت 16px */
-    }
-
-    .footer-bottom {
-        font-size: 13px;  /* كانت 9px */
+    .card-footer {
+        padding-top: 6px !important;
     }
 }
 
+/* ============================================
+   ADD PROPERTY BUTTON & MODAL
+   ============================================ */
 
-@media (max-width: 480px) {
-    .properties-grid {
-        gap: 12px !important;
+/* زر أضف عقارك */
+.btn-add-property {
+    background: var(--primary);
+    color: var(--secondary);
+    border: none;
+    padding: 14px 32px;
+    border-radius: 60px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+    margin-top: 15px;
+}
+.btn-add-property:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-gold);
+}
+.btn-add-property i {
+    font-size: 18px;
+}
+
+/* تحسين نموذج إضافة العقار */
+#addPropertyModal .modal-container {
+    max-width: 700px;
+}
+#addPropertyModal .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+#addPropertyModal .form-group {
+    margin-bottom: 10px;
+}
+#addPropertyModal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 14px;
+}
+#addPropertyModal .form-group .required {
+    color: var(--danger);
+}
+#addPropertyModal .form-input,
+#addPropertyModal .filter-select {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    background: var(--white);
+    transition: var(--transition);
+}
+#addPropertyModal .form-input:focus,
+#addPropertyModal .filter-select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+}
+#addPropertyModal textarea.form-input {
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* استجابة للجوال */
+@media (max-width: 768px) {
+    .btn-add-property {
+        padding: 10px 20px;
+        font-size: 14px;
+        width: 100%;
+        justify-content: center;
     }
-
-    .card-images {
-        height: 150px !important;
+    #addPropertyModal .form-row {
+        grid-template-columns: 1fr;
+        gap: 10px;
     }
-
-    .card-body {
-        padding: 8px !important;
-    }
-
-    .card-title {
-        font-size: 14px !important;
-    }
-
-    .card-price {
-        font-size: 16px !important;
-    }
-
-    .btn-more {
-        font-size: 11px !important;
-        padding: 4px 10px !important;
+    #addPropertyModal .modal-container {
+        max-width: 95%;
+        padding: 15px;
     }
 }
