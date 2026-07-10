@@ -17,33 +17,72 @@ const DEFAULT_IMAGE = 'https://res.cloudinary.com/dkdilpnuc/image/upload/v178319
 // ============================================================
 
 const CLOUDINARY_CONFIG = {
-    cloudName: 'dkdilpnuc', // ✅ استبدل بـ Cloud Name الخاص بك
+    cloudName: 'kingsomoza', // ✅ استبدل بـ Cloud Name الخاص بك
     uploadPreset: 'king_properties' // ✅ استبدل بـ Upload Preset الخاص بك
 };
 
 // ============================================================
-// رفع الصور إلى Cloudinary
+// رفع الصور إلى Cloudinary - مع تنظيم المجلدات
 // ============================================================
 
-async function uploadImageToCloudinary(file) {
+async function uploadImageToCloudinary(file, propertyId = null) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('upload_preset', CLOUDINARY_CONFIG.uploadPreset);
     
+    // ✅ إضافة مجلد بناءً على معرف العقار (إذا كان موجوداً)
+    if (propertyId) {
+        // استخدام معرف العقار كاسم للمجلد
+        const folderName = `properties/${propertyId}`;
+        formData.append('folder', folderName);
+        console.log(`📁 رفع الصورة إلى المجلد: ${folderName}`);
+    } else {
+        // إذا لم يكن هناك معرف، استخدم مجلد مؤقت
+        formData.append('folder', 'properties/temp');
+    }
+    
     try {
-        const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!response.ok) {
-            throw new Error('فشل رفع الصورة');
+        let attempts = 0;
+        const maxAttempts = 3;
+        let lastError = null;
+
+        while (attempts < maxAttempts) {
+            attempts++;
+            try {
+                const response = await fetch(`https://api.cloudinary.com/v1_1/${CLOUDINARY_CONFIG.cloudName}/image/upload`, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'cors'
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.secure_url) {
+                    console.log(`✅ تم رفع الصورة بنجاح: ${data.secure_url}`);
+                    return data.secure_url;
+                } else {
+                    throw new Error('لم يتم استلام رابط الصورة');
+                }
+            } catch (err) {
+                lastError = err;
+                console.warn(`⚠️ محاولة ${attempts}/${maxAttempts} فشلت:`, err.message);
+                
+                if (attempts < maxAttempts) {
+                    await new Promise(resolve => setTimeout(resolve, attempts * 1000));
+                }
+            }
         }
-        
-        const data = await response.json();
-        return data.secure_url; // رابط الصورة
+
+        console.error('❌ فشل رفع الصورة بعد', maxAttempts, 'محاولات:', lastError);
+        showToast(`❌ فشل رفع الصورة: ${lastError?.message || 'حاول مرة أخرى'}`, 'error');
+        return null;
+
     } catch (error) {
-        console.error('❌ خطأ في رفع الصورة:', error);
+        console.error('❌ خطأ غير متوقع في رفع الصورة:', error);
         showToast('❌ فشل رفع الصورة، حاول مرة أخرى', 'error');
         return null;
     }
@@ -928,17 +967,28 @@ function createPropertyCard(p) {
         dotsHtml += '</div>';
     }
     
+    // ✅ تحديد إذا كان العنصر الأول فيديو
+    const firstMedia = imagesArray[0] || DEFAULT_IMAGE;
+    const isFirstVideo = isVideoUrl(firstMedia);
+    
+    // ✅ بناء عنصر الوسائط المناسب
+    let mediaHtml = '';
+    if (isFirstVideo) {
+        mediaHtml = `<video class="card-main-video" src="${firstMedia}" muted loop playsinline autoplay style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;"></video>`;
+    } else {
+        mediaHtml = `<img class="card-main-img" src="${firstMedia}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;">`;
+    }
+    
     return `<div class="property-card ${isFeatured ? 'featured-property' : ''}" data-id="${p.id}" data-images='${JSON.stringify(imagesArray)}' data-current-img="0">
         ${!p.available ? `<div class="sold-overlay"><div class="sold-stamp">${t?.sold_stamp || 'مباع'}</div></div>` : ''}
-        ${isFeatured ? `<div class="featured-badge">${t?.featured_badge || '⭐ مميز'}</div>` : ''}
-        <div class="card-badges"><span class="badge-type ${p.type === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.type === 'sale' ? (t?.filter_transaction_sale || 'للبيع') : (t?.filter_transaction_rent || 'للإيجار')}</span></div>
+        ${isFeatured ? `<div class="featured-badge"><i class="fas fa-star"></i> ${t?.featured_badge || 'مميز'}</div>` : ''}
+        <div class="card-badges"><span class="badge-type ${p.type === 'sale' ? 'badge-sale' : 'badge-rent'}">${p.type === 'sale' ? `<i class="fas fa-tag"></i> ${t?.filter_transaction_sale || 'للبيع'}` : `<i class="fas fa-key"></i> ${t?.filter_transaction_rent || 'للإيجار'}`}</span></div>
         <div class="card-images" data-id="${p.id}">
-            <img class="card-main-img" src="${imagesArray[0]}" alt="${title}" loading="lazy">
+            ${mediaHtml}
             ${imageCount > 1 ? `<button class="card-img-nav prev" data-id="${p.id}">❮</button><button class="card-img-nav next" data-id="${p.id}">❯</button>` : ''}
             ${dotsHtml}
         </div>
         <div class="card-body">
-            <!-- ✅ تم نقل الكود إلى هنا -->
             <div class="card-stats">
                 <div class="card-views"><i class="fas fa-eye"></i> ${p.views || 0} ${t?.views_text || 'مشاهدة'}</div>
                 <div class="card-favs"><i class="fas fa-heart"></i> ${p.favCount || 0}</div>
@@ -956,7 +1006,7 @@ function createPropertyCard(p) {
                 <div class="card-price">
                     ${p.isPriceNumeric ? 
                         `${Number(p.price).toLocaleString()} <span>${p.currency}</span>` : 
-                        `<span class="price-contact">💰 ${p.price}</span>`}
+                        `<span class="price-contact"><i class="fas fa-tag"></i> ${p.price}</span>`}
                     ${p.type === 'rent' ? ` <span class="rent-period">${getRentPeriodText(p.rent_period)}</span>` : ''}
                 </div>
                 <button class="btn-more" onclick="event.stopPropagation();openPropertyModal('${p.id}')">${t?.more_btn || 'عرض المزيد'} <i class="fas fa-arrow-left"></i></button>
@@ -1024,7 +1074,7 @@ function nextCardImage(e) {
     e.stopPropagation();
     const card = e.currentTarget.closest('.property-card');
     if (!card) return;
-    const imgElement = card.querySelector('.card-main-img');
+    const mediaElement = card.querySelector('.card-main-img, .card-main-video');
     let images = card.dataset.images;
     if (!images) return;
     let imagesArray;
@@ -1033,7 +1083,113 @@ function nextCardImage(e) {
     let currentIndex = parseInt(card.dataset.currentImg) || 0;
     currentIndex = (currentIndex + 1) % imagesArray.length;
     card.dataset.currentImg = currentIndex;
-    imgElement.src = imagesArray[currentIndex];
+    
+    const mediaUrl = imagesArray[currentIndex];
+    const isVideo = isVideoUrl(mediaUrl);
+    
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.className = 'card-main-video';
+        video.src = mediaUrl;
+        video.muted = true;
+        video.loop = true;
+        video.playsinline = true;
+        video.autoplay = true;
+        video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        mediaElement.replaceWith(video);
+    } else {
+        const img = document.createElement('img');
+        img.className = 'card-main-img';
+        img.src = mediaUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        mediaElement.replaceWith(img);
+    }
+    
+    const dots = card.querySelectorAll('.img-dot');
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+}
+
+function prevCardImage(e) {
+    e.stopPropagation();
+    const card = e.currentTarget.closest('.property-card');
+    if (!card) return;
+    const mediaElement = card.querySelector('.card-main-img, .card-main-video');
+    let images = card.dataset.images;
+    if (!images) return;
+    let imagesArray;
+    try { imagesArray = JSON.parse(images); } catch { return; }
+    if (!imagesArray.length) return;
+    let currentIndex = parseInt(card.dataset.currentImg) || 0;
+    currentIndex = (currentIndex - 1 + imagesArray.length) % imagesArray.length;
+    card.dataset.currentImg = currentIndex;
+    
+    const mediaUrl = imagesArray[currentIndex];
+    const isVideo = isVideoUrl(mediaUrl);
+    
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.className = 'card-main-video';
+        video.src = mediaUrl;
+        video.muted = true;
+        video.loop = true;
+        video.playsinline = true;
+        video.autoplay = true;
+        video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        mediaElement.replaceWith(video);
+    } else {
+        const img = document.createElement('img');
+        img.className = 'card-main-img';
+        img.src = mediaUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        mediaElement.replaceWith(img);
+    }
+    
+    const dots = card.querySelectorAll('.img-dot');
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+}
+
+// نفس التعديل لـ prevCardImage
+function prevCardImage(e) {
+    e.stopPropagation();
+    const card = e.currentTarget.closest('.property-card');
+    if (!card) return;
+    const mediaElement = card.querySelector('.card-main-img, .card-main-video');
+    let images = card.dataset.images;
+    if (!images) return;
+    let imagesArray;
+    try { imagesArray = JSON.parse(images); } catch { return; }
+    if (!imagesArray.length) return;
+    let currentIndex = parseInt(card.dataset.currentImg) || 0;
+    currentIndex = (currentIndex - 1 + imagesArray.length) % imagesArray.length;
+    card.dataset.currentImg = currentIndex;
+    
+    const mediaUrl = imagesArray[currentIndex];
+    const isVideo = isVideoUrl(mediaUrl);
+    
+    if (isVideo) {
+        const video = document.createElement('video');
+        video.className = 'card-main-video';
+        video.src = mediaUrl;
+        video.muted = true;
+        video.loop = true;
+        video.playsinline = true;
+        video.autoplay = true;
+        video.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        mediaElement.replaceWith(video);
+    } else {
+        const img = document.createElement('img');
+        img.className = 'card-main-img';
+        img.src = mediaUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+        mediaElement.replaceWith(img);
+    }
+    
     const dots = card.querySelectorAll('.img-dot');
     dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
 }
@@ -1075,26 +1231,20 @@ function dotClickHandler(e) {
 }
 
 // ============================================================
-// 7. دوال الإحصائيات
+// 7. دوال الإحصائيات - نظام عداد زوار دقيق
 // ============================================================
 
 async function initStats() {
+    // قراءة العداد من localStorage أولاً
     let visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
     let contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
     
     updateStatsUI(visitors, contacts);
     
-    fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.count) {
-                visitors = data.count;
-                localStorage.setItem('kh_visitors_total', visitors);
-                updateStatsUI(visitors, contacts);
-            }
-        })
-        .catch(err => console.error('خطأ في جلب الزوار:', err));
+    // جلب العداد من الخادم
+    await fetchVisitorCount();
     
+    // جلب عدد الاستفسارات
     fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`)
         .then(res => res.json())
         .then(data => {
@@ -1107,11 +1257,98 @@ async function initStats() {
         .catch(err => console.error('خطأ في جلب الاستفسارات:', err));
 }
 
+// دالة جلب عدد الزوار من الخادم
+async function fetchVisitorCount() {
+    try {
+        // ✅ استخدام no-cors للحصول على البيانات
+        const response = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        
+        // مع no-cors، لا يمكن قراءة الرد، لذا نستخدم localStorage مؤقتاً
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        console.log(`📊 عدد الزوار الحالي (من localStorage): ${visitors}`);
+        return visitors;
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب عدد الزوار:', error);
+        return parseInt(localStorage.getItem('kh_visitors_total') || '0');
+    }
+}
+
+// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000; // 5 دقائق بالميلي ثانية
+    
+    // التحقق من مرور 5 دقائق منذ آخر تسجيل
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد، انتظر ${Math.ceil((fiveMinutes - (now - lastVisitTime)) / 1000)} ثانية`);
+        return false;
+    }
+    
+    // تحديث وقت الزيارة في localStorage
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        // ✅ إرسال طلب إلى الخادم لزيادة العداد باستخدام no-cors
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',  // ✅ هذا مهم جداً للعمل من الملفات المحلية
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        
+        // ✅ تحديث العداد محلياً بزيادة 1 (نظراً لأننا لا نستطيع قراءة الرد)
+        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const newCount = currentCount + 1;
+        localStorage.setItem('kh_visitors_total', newCount);
+        updateStatsUI(newCount, parseInt(localStorage.getItem('kh_contacts_total') || '0'));
+        
+        console.log(`📊 العدد الجديد (تقديري): ${newCount}`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        
+        // محاولة مرة أخرى بعد 30 ثانية
+        setTimeout(() => {
+            console.log('🔄 إعادة محاولة تسجيل الزائر...');
+            incrementVisitorCount();
+        }, 30000);
+        
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات (للمستخدمين الذين يتواصلون)
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم تحديث عداد الاستفسارات');
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
 function updateStatsUI(visitors, contacts) {
     const available = allProperties.filter(p => p.available).length;
     const sold = allProperties.filter(p => !p.available).length;
     
     const elements = {
+        // العناصر القديمة (احتفظ بها للتوافق)
         heroAvailable: available,
         heroSold: sold,
         heroVisitors: visitors,
@@ -1119,7 +1356,11 @@ function updateStatsUI(visitors, contacts) {
         statsSold: sold,
         statsVisitors: visitors,
         statsContacts: contacts,
-        totalVisitors: visitors
+        totalVisitors: visitors,
+        // ✅ العناصر الجديدة للإحصائيات المدمجة
+        heroAvailableInline: available,
+        heroSoldInline: sold,
+        heroVisitorsInline: visitors
     };
     
     Object.entries(elements).forEach(([id, value]) => {
@@ -1131,27 +1372,20 @@ function updateStatsUI(visitors, contacts) {
 async function autoRefreshStats() {
     console.log('🔄 جاري تحديث الإحصائيات...');
     try {
-        const visitorRes = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`);
-        const visitorData = await visitorRes.json();
-        const visitors = visitorData?.count || 0;
+        // تحديث عدد الزوار
+        await fetchVisitorCount();
         
+        // تحديث عدد الاستفسارات
         const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
         const contactsData = await contactsRes.json();
-        const contacts = contactsData?.count || 0;
+        if (contactsData && contactsData.count !== undefined) {
+            const contacts = contactsData.count;
+            localStorage.setItem('kh_contacts_total', contacts);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            updateStatsUI(visitors, contacts);
+        }
         
-        ['heroVisitors', 'statsVisitors', 'totalVisitors'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerText = visitors;
-        });
-        
-        const statsContacts = document.getElementById('statsContacts');
-        if (statsContacts) statsContacts.innerText = contacts;
-        
-        localStorage.setItem('kh_visitors_total', visitors);
-        localStorage.setItem('kh_contacts_total', contacts);
-        
-        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر، ${contacts} استفسار`);
-    } catch (error) {
+        console.log(`✅ تم تحديث الإحصائيات`);    } catch (error) {
         console.error('❌ فشل تحديث الإحصائيات، إعادة المحاولة بعد 30 ثانية');
         setTimeout(autoRefreshStats, 30000);
         return;
@@ -1557,10 +1791,52 @@ async function openPropertyModal(id) {
     if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${p.views} ${t?.property_views || 'مشاهدة'}`;
     renderProperties();
     
+    // ✅ تعيين الصور الحالية
     currentPropertyImages = p.images || [];
     currentImageIndex = 0;
+
+    // ✅ تنظيف معرض الصور مع الحفاظ على أزرار التنقل
+    const galleryMain = document.getElementById('galleryMain');
+    if (galleryMain) {
+        // حذف جميع العناصر باستثناء .gallery-nav و .image-counter
+        const children = galleryMain.children;
+        for (let i = children.length - 1; i >= 0; i--) {
+            const child = children[i];
+            if (!child.classList.contains('gallery-nav') && !child.classList.contains('image-counter')) {
+                child.remove();
+            }
+        }
+        
+        // ✅ إذا لم توجد أزرار تنقل، أضفها
+        let galleryNav = galleryMain.querySelector('.gallery-nav');
+        if (!galleryNav) {
+            galleryNav = document.createElement('div');
+            galleryNav.className = 'gallery-nav';
+            galleryNav.innerHTML = `
+                <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+            galleryMain.appendChild(galleryNav);
+        }
+        
+        // ✅ إذا لم يوجد عداد، أضفه
+        let counter = galleryMain.querySelector('.image-counter');
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.className = 'image-counter';
+            counter.id = 'imageCounter';
+            counter.textContent = '0/0';
+            galleryMain.appendChild(counter);
+        }
+    }
+
+    // ✅ تحديث الصورة/الفيديو
     updateModalImage();
-    
+        
     // المواصفات
     const specs = document.getElementById('propModalSpecs');
     if (specs) {
@@ -1609,8 +1885,6 @@ async function openPropertyModal(id) {
         if (hasValidCoordinates) {
             const lat = p.lat;
             const lng = p.lng;
-            const locationName = encodeURIComponent(p.location || getLocalizedText(p, 'district') || 'موقع العقار');
-            const t = translations[currentLanguage];
             
             mapDiv.innerHTML = `
                 <div style="position:relative;width:100%;height:100%;min-height:200px;background:#f5f5f5;border-radius:12px;overflow:hidden;">
@@ -1668,26 +1942,227 @@ async function openPropertyModal(id) {
     history.pushState({}, '', `${window.location.pathname}?id=${id}`);
 }
 
+// استبدل دالة updateModalImage الموجودة بهذه النسخة
 function updateModalImage() {
-    const img = document.getElementById('propModalImg');
+    const galleryMain = document.getElementById('galleryMain');
     const counter = document.getElementById('imageCounter');
-    if (currentPropertyImages.length) {
-        if (img) img.src = currentPropertyImages[currentImageIndex];
-        if (counter) counter.textContent = `${currentImageIndex + 1}/${currentPropertyImages.length}`;
-    } else if (img) {
+    
+    if (!galleryMain) return;
+    
+    // ✅ 1. حذف جميع عناصر الوسائط السابقة مع الاحتفاظ بأزرار التنقل والعداد
+    const children = galleryMain.children;
+    for (let i = children.length - 1; i >= 0; i--) {
+        const child = children[i];
+        // احتفظ فقط بأزرار التنقل والعداد
+        if (!child.classList.contains('gallery-nav') && !child.classList.contains('image-counter')) {
+            child.remove();
+        }
+    }
+    
+    // ✅ 2. التأكد من وجود أزرار التنقل
+    let galleryNav = galleryMain.querySelector('.gallery-nav');
+    if (!galleryNav) {
+        galleryNav = document.createElement('div');
+        galleryNav.className = 'gallery-nav';
+        galleryNav.innerHTML = `
+            <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        `;
+        galleryMain.appendChild(galleryNav);
+    }
+    
+    // ✅ 3. التأكد من وجود عداد الصور
+    let imageCounter = galleryMain.querySelector('.image-counter');
+    if (!imageCounter) {
+        imageCounter = document.createElement('div');
+        imageCounter.className = 'image-counter';
+        imageCounter.id = 'imageCounter';
+        galleryMain.appendChild(imageCounter);
+    }
+    
+    // ✅ 4. إنشاء حاوية الوسائط الجديدة (بنفس الحجم دائماً)
+    const wrapper = document.createElement('div');
+    wrapper.className = 'media-wrapper';
+    // ✅ أنماط ثابتة للحاوية - تضمن نفس الحجم لجميع الصور
+    wrapper.style.cssText = `
+        width: 100% !important;
+        height: 100% !important;
+        min-height: 400px !important;
+        max-height: 600px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: #0a0a0a !important;
+        overflow: hidden !important;
+        position: relative !important;
+    `;
+    
+    // ✅ 5. إضافة الحاوية قبل أزرار التنقل
+    galleryMain.insertBefore(wrapper, galleryNav);
+    
+    // ✅ 6. التحقق من وجود صور
+    if (currentPropertyImages && currentPropertyImages.length > 0 && currentPropertyImages[currentImageIndex]) {
+        const mediaUrl = currentPropertyImages[currentImageIndex];
+        const isVideo = isVideoUrl(mediaUrl);
+        
+        if (isVideo) {
+            // ✅ معالجة الفيديو
+            const video = document.createElement('video');
+            video.src = mediaUrl;
+            video.controls = true;
+            video.autoplay = false;
+            video.muted = false;
+            video.playsinline = true;
+            video.preload = 'metadata';
+            video.style.cssText = `
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100% !important;
+                max-height: 100% !important;
+                object-fit: contain !important;
+                display: block !important;
+                background: #000 !important;
+            `;
+            wrapper.appendChild(video);
+        } else {
+            // ✅ معالجة الصورة - تطبيق أنماط موحدة لجميع الصور
+            const img = document.createElement('img');
+            img.src = mediaUrl;
+            img.alt = 'صورة العقار';
+            img.loading = 'lazy';
+            // ✅ أنماط ثابتة لجميع الصور - تضمن عرضها بالحجم الكامل
+            img.style.cssText = `
+                width: auto !important;
+                height: auto !important;
+                max-width: 95% !important;
+                max-height: 95% !important;
+                object-fit: contain !important;
+                display: block !important;
+                background: #0a0a0a !important;
+                border-radius: 4px !important;
+                box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
+                transition: none !important;
+            `;
+            
+            // ✅ عند تحميل الصورة، تأكد من أن الأنماط صحيحة
+            img.onload = function() {
+                // إعادة تطبيق الأنماط للتأكد من عدم تغييرها
+                this.style.cssText = `
+                    width: auto !important;
+                    height: auto !important;
+                    max-width: 95% !important;
+                    max-height: 95% !important;
+                    object-fit: contain !important;
+                    display: block !important;
+                    background: #0a0a0a !important;
+                    border-radius: 4px !important;
+                    box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
+                    transition: none !important;
+                `;
+            };
+            
+            // ✅ في حالة فشل تحميل الصورة
+            img.onerror = function() {
+                this.src = DEFAULT_IMAGE;
+                this.alt = 'الصورة غير متوفرة';
+                this.style.cssText = `
+                    width: auto !important;
+                    height: auto !important;
+                    max-width: 60% !important;
+                    max-height: 60% !important;
+                    object-fit: contain !important;
+                    display: block !important;
+                    opacity: 0.5 !important;
+                `;
+            };
+            
+            wrapper.appendChild(img);
+        }
+        
+        // ✅ 7. تحديث العداد
+        if (imageCounter) {
+            imageCounter.textContent = `${currentImageIndex + 1}/${currentPropertyImages.length}`;
+            imageCounter.style.display = 'block';
+        }
+        
+        // ✅ 8. إظهار أزرار التنقل
+        galleryNav.style.display = 'flex';
+        
+    } else {
+        // ✅ 9. عرض الصورة الافتراضية (عند عدم وجود صور)
+        const img = document.createElement('img');
         img.src = DEFAULT_IMAGE;
+        img.alt = 'صورة افتراضية';
+        img.style.cssText = `
+            width: auto !important;
+            height: auto !important;
+            max-width: 60% !important;
+            max-height: 60% !important;
+            object-fit: contain !important;
+            display: block !important;
+            opacity: 0.4 !important;
+        `;
+        wrapper.appendChild(img);
+        
+        if (imageCounter) {
+            imageCounter.textContent = '0/0';
+            imageCounter.style.display = 'none';
+        }
+        
+        galleryNav.style.display = 'flex';
+    }
+}
+
+// ✅ دالة مساعدة لعرض الصورة الافتراضية
+function showFallbackImage(galleryMain, counter) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'media-wrapper';
+    wrapper.style.cssText = `
+        width: 100%;
+        height: 100%;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a0a;
+        border-radius: 12px 12px 0 0;
+        overflow: hidden;
+    `;
+    
+    const img = document.createElement('img');
+    img.src = DEFAULT_IMAGE;
+    img.alt = 'صورة افتراضية';
+    img.style.cssText = `
+        width: auto;
+        height: auto;
+        max-width: 80%;
+        max-height: 80%;
+        object-fit: contain;
+        display: block;
+        opacity: 0.5;
+    `;
+    wrapper.appendChild(img);
+    galleryMain.appendChild(wrapper);
+    
+    if (counter) {
+        counter.textContent = '0/0';
+        counter.style.display = 'none';
     }
 }
 
 function nextPropImg() {
-    if (currentPropertyImages.length) {
+    if (currentPropertyImages && currentPropertyImages.length > 0) {
         currentImageIndex = (currentImageIndex + 1) % currentPropertyImages.length;
         updateModalImage();
     }
 }
 
 function prevPropImg() {
-    if (currentPropertyImages.length) {
+    if (currentPropertyImages && currentPropertyImages.length > 0) {
         currentImageIndex = (currentImageIndex - 1 + currentPropertyImages.length) % currentPropertyImages.length;
         updateModalImage();
     }
@@ -1803,33 +2278,120 @@ function performSmartSearch(searchTerm) {
     }
     
     const term = searchTerm.trim().toLowerCase();
+    
     const results = allProperties.filter(p => {
-        const title = getLocalizedText(p, 'title');
-        return title.toLowerCase().includes(term) || p.id.toLowerCase().includes(term);
+        // البحث في جميع الحقول المتاحة
+        const searchableFields = [
+            p.id,
+            p.title_ar,
+            p.title_en,
+            p.description_ar,
+            p.description_en,
+            p.district_ar,
+            p.district_en,
+            p.governorate_ar,
+            p.governorate_en,
+            p.city_ar,
+            p.city_en,
+            p.location,
+            p.ownership_ar,
+            p.ownership_en,
+            p.type, // sale / rent
+            p.propertyType,
+            p.currency,
+            p.price ? String(p.price) : '',
+            p.area ? String(p.area) : '',
+            p.rooms ? String(p.rooms) : '',
+            p.floor !== undefined ? String(p.floor) : '',
+            p.available !== undefined ? (p.available ? 'متاح' : 'مباع') : '',
+            p.available !== undefined ? (p.available ? 'available' : 'sold') : '',
+        ];
+        
+        // إضافة مدة الإيجار إذا كانت موجودة
+        if (p.rent_period) {
+            searchableFields.push(p.rent_period);
+            if (p.rent_period === 'month') {
+                searchableFields.push('شهرياً', 'monthly');
+            } else if (p.rent_period === 'year') {
+                searchableFields.push('سنوياً', 'yearly');
+            } else if (p.rent_period === 'week') {
+                searchableFields.push('أسبوعياً', 'weekly');
+            }
+        }
+        
+        // إضافة نوع العملية باللغتين
+        if (p.type === 'sale') {
+            searchableFields.push('بيع', 'sale', 'للبيع', 'for sale');
+        } else if (p.type === 'rent') {
+            searchableFields.push('إيجار', 'rent', 'للإيجار', 'for rent');
+        }
+        
+        // إضافة نوع العقار باللغتين
+        const propertyTypes = {
+            'apartment': ['شقة', 'apartment', 'شقّة'],
+            'house': ['منزل', 'house', 'بيت'],
+            'villa': ['فيلا', 'villa'],
+            'shop': ['محل', 'shop', 'متجر', 'تجاري'],
+            'building': ['بناء', 'building', 'عمارة'],
+            'land': ['أرض', 'land']
+        };
+        if (p.propertyType && propertyTypes[p.propertyType]) {
+            searchableFields.push(...propertyTypes[p.propertyType]);
+        }
+        
+        // البحث في جميع الحقول
+        return searchableFields.some(field => {
+            if (!field) return false;
+            return String(field).toLowerCase().includes(term);
+        });
     }).slice(0, 8);
     
     if (!heroSearchDropdown) return;
     
+    const t = translations[currentLanguage] || translations.ar;
+    const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج لـ "' : 'No results for "';
+    const propertyTypes = {
+        'apartment': currentLanguage === 'ar' ? 'شقة' : 'Apartment',
+        'house': currentLanguage === 'ar' ? 'منزل' : 'House',
+        'villa': currentLanguage === 'ar' ? 'فيلا' : 'Villa',
+        'shop': currentLanguage === 'ar' ? 'محل تجاري' : 'Shop',
+        'building': currentLanguage === 'ar' ? 'بناء' : 'Building',
+        'land': currentLanguage === 'ar' ? 'أرض' : 'Land'
+    };
+    
     if (results.length === 0) {
-        const noResultsText = currentLanguage === 'ar' ? 'لا توجد نتائج لـ "' : 'No results for "';
         heroSearchDropdown.innerHTML = `<div class="hero-result-item" style="justify-content: center; color: var(--gray);"><i class="fas fa-search"></i> ${noResultsText}${searchTerm}"</div>`;
         heroSearchDropdown.style.display = 'block';
         return;
     }
     
     heroSearchDropdown.innerHTML = results.map(p => {
-        const img = p.images && p.images.length ? p.images[0] : DEFAULT_IMAGE;        const title = getLocalizedText(p, 'title');
+        const img = p.images && p.images.length ? p.images[0] : DEFAULT_IMAGE;
+        const title = getLocalizedText(p, 'title');
         const location = getLocalizedText(p, 'district') || p.district || p.location;
+        const priceDisplay = p.isPriceNumeric ? `${Number(p.price).toLocaleString()} ${p.currency}` : p.price;
+        const typeLabel = p.type === 'sale' ? 
+            (currentLanguage === 'ar' ? '🏷️ للبيع' : '🏷️ For Sale') : 
+            (currentLanguage === 'ar' ? '🔑 للإيجار' : '🔑 For Rent');
+        const propertyType = propertyTypes[p.propertyType] || p.propertyType;
+        const ownership = getLocalizedText(p, 'ownership') || p.ownership_ar || p.ownership_en || '';
+        
         return `<div class="hero-result-item" onclick="selectPropertyFromSearch('${p.id}')">
             <img src="${img}" class="hero-result-image" alt="${title}">
             <div class="hero-result-info">
                 <div class="hero-result-title">${title}</div>
-                <div><span class="hero-result-code">${p.id}</span></div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:2px;">
+                    <span class="hero-result-code">${p.id}</span>
+                    <span class="hero-result-type">${typeLabel}</span>
+                    ${propertyType ? `<span class="hero-result-type">${propertyType}</span>` : ''}
+                </div>
                 <div class="hero-result-location"><i class="fas fa-map-marker-alt"></i> ${location}</div>
+                ${ownership ? `<div class="hero-result-ownership"><i class="fas fa-file-contract"></i> ${ownership}</div>` : ''}
             </div>
-            <div class="hero-result-price">${p.isPriceNumeric ? `${Number(p.price).toLocaleString()} ${p.currency}` : p.price}</div>
-            </div>`;
+            <div class="hero-result-price">${priceDisplay}</div>
+        </div>`;
     }).join('');
+    
     heroSearchDropdown.style.display = 'block';
     ensureDropdownAboveAll();
 }
@@ -1970,6 +2532,15 @@ function formatDate(dateString) {
     }
 }
 
+// دالة للكشف إذا كان الرابط فيديو
+function isVideoUrl(url) {
+    if (!url) return false;
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.m4v'];
+    const lowerUrl = url.toLowerCase();
+    return videoExtensions.some(ext => lowerUrl.endsWith(ext)) || lowerUrl.includes('/video/upload/');
+}
+
+
 function showToast(msg, type = 'success') {
     const t = document.getElementById('toast');
     if (!t) return;
@@ -2099,7 +2670,7 @@ async function loadProperties() {
                     location: row.location || 'موقع غير محدد',
                     lat: Number(row.latitude) || 0,
                     lng: Number(row.longitude) || 0,
-                    images: imagesArray, // ✅ الآن يحمل الشعار إذا لم توجد صور
+                    images: imagesArray,
                     available: isAvailable,
                     views: Number(row.views) || 0,
                     featured: row.featured || 'no',
@@ -2107,10 +2678,10 @@ async function loadProperties() {
                 };
             });
 
-         console.log('📊 تم تحميل العقارات:');
-           allProperties.forEach(p => {
-            console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
-          });
+            console.log('📊 تم تحميل العقارات:');
+            allProperties.forEach(p => {
+                console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
+            });
             
             allProperties.sort((a, b) => {
                 if (a.featured === 'yes' && b.featured !== 'yes') return -1;
@@ -2124,6 +2695,9 @@ async function loadProperties() {
             const soldCount = allProperties.filter(p => !p.available).length;
             console.log(`✅ تم تحميل ${allProperties.length} عقار (${availableCount} متاح, ${soldCount} مباع)`);
             showToast(`✅ تم تحميل ${allProperties.length} عقار`, 'success');
+            
+            // ✅ تسجيل زائر جديد (بعد تحميل العقارات)
+            incrementVisitorCount();
         } else {
             throw new Error('لا توجد بيانات');
         }
@@ -2131,7 +2705,7 @@ async function loadProperties() {
         console.error('❌ خطأ في تحميل البيانات:', error);
         showToast('❌ لا توجد بيانات، يرجى إضافة عقارات', 'error');
         allProperties = [];
-        forceHideLoader(); // ✅ أضف هذا السطر
+        forceHideLoader();
     }
     
     filteredProperties = [...allProperties];
@@ -2431,168 +3005,340 @@ function closeAddPropertyModal() {
 }
 
 // ============================================================
-// رفع الصور (سحب وإفلات)
+// رفع الصور - أسهل حل
 // ============================================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    const dropZone = document.getElementById('dropZone');
-    const fileInput = document.getElementById('propertyImagesInput');
-    const imagePreview = document.getElementById('imagePreview');
-    const imagesHidden = document.getElementById('propertyImages');
-    let uploadedImages = [];
+// جلب العناصر
+const fileInput = document.getElementById('propertyImagesInput');
+const dropZone = document.getElementById('dropZone');
+const imagePreview = document.getElementById('imagePreview');
+const imagesHidden = document.getElementById('propertyImages');
 
-    // فتح نافذة اختيار الملفات عند الضغط على المنطقة
-    dropZone.addEventListener('click', function() {
+if (fileInput && dropZone && imagePreview) {
+    console.log('✅ عناصر رفع الصور موجودة');
+    
+    // ===== 1. فتح نافذة اختيار الصور عند النقر على الزر =====
+    const selectBtn = document.getElementById('selectImagesBtn');
+    if (selectBtn) {
+        selectBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('🖱️ زر اختيار الصور - فتح النافذة');
+            fileInput.click();
+        };
+    }
+    
+    // ===== 2. فتح نافذة اختيار الصور عند النقر على منطقة الإفلات =====
+    dropZone.onclick = function(e) {
+        // إذا كان النقر على الزر أو على الـ input، لا تفعل شيء
+        if (e.target.tagName === 'BUTTON' || e.target.tagName === 'INPUT') return;
+        e.preventDefault();
+        console.log('🖱️ منطقة الإفلات - فتح النافذة');
         fileInput.click();
-    });
-
-    // عند اختيار ملفات
-    fileInput.addEventListener('change', function(e) {
+    };
+    
+    // ===== 3. عند اختيار ملفات =====
+    fileInput.onchange = function(e) {
         const files = e.target.files;
-        handleFiles(files);
-    });
-
-    // سحب وإفلات
-    dropZone.addEventListener('dragover', function(e) {
+        console.log(`📁 تم اختيار ${files.length} ملف`);
+        if (files && files.length > 0) {
+            handleUploadedFiles(files);
+        }
+        // إعادة تعيين قيمة input
+        fileInput.value = '';
+    };
+    
+    // ===== 4. السحب والإفلات =====
+    dropZone.ondragover = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = 'var(--primary)';
-        dropZone.style.background = 'rgba(201,168,76,0.1)';
-    });
-
-    dropZone.addEventListener('dragleave', function(e) {
+        this.style.borderColor = '#C9A84C';
+        this.style.background = 'rgba(201,168,76,0.1)';
+    };
+    
+    dropZone.ondragleave = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = '#ddd';
-        dropZone.style.background = '#fafafa';
-    });
-
-    dropZone.addEventListener('drop', function(e) {
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
+    };
+    
+    dropZone.ondrop = function(e) {
         e.preventDefault();
-        dropZone.style.borderColor = '#ddd';
-        dropZone.style.background = '#fafafa';
+        this.style.borderColor = '#ddd';
+        this.style.background = '#fafafa';
         const files = e.dataTransfer.files;
-        handleFiles(files);
-    });
-
-    function handleFiles(files) {
+        console.log(`📁 تم إسقاط ${files.length} ملف`);
+        if (files && files.length > 0) {
+            handleUploadedFiles(files);
+        }
+    };
+    
+    // ===== 5. معالجة الملفات المرفوعة =====
+    async function handleUploadedFiles(files) {
+        if (!imagePreview || !imagesHidden) return;
+        
+        // الحصول على معرف العقار من النموذج (إذا كان موجوداً)
+        const propertyIdInput = document.getElementById('propertyId');
+        const propertyId = propertyIdInput ? propertyIdInput.value : null;
+        
+        let currentImages = [];
+        try {
+            currentImages = JSON.parse(imagesHidden.value || '[]');
+        } catch {
+            currentImages = [];
+        }
+        
+        let successCount = 0;
+        
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            if (!file.type.startsWith('image/')) continue;
+            if (!file.type.startsWith('image/')) {
+                console.log(`⚠️ ${file.name} ليس صورة`);
+                continue;
+            }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imgData = e.target.result;
-                uploadedImages.push(imgData);
-                
-                // عرض الصورة المصغرة
-                const imgWrapper = document.createElement('div');
-                imgWrapper.style.position = 'relative';
-                imgWrapper.style.width = '80px';
-                imgWrapper.style.height = '80px';
-                imgWrapper.style.borderRadius = '8px';
-                imgWrapper.style.overflow = 'hidden';
-                imgWrapper.style.border = '1px solid #ddd';
-                
+            console.log(`📤 رفع: ${file.name}`);
+            
+            // إضافة مؤشر تحميل
+            const imgWrapper = document.createElement('div');
+            imgWrapper.style.cssText = 'position:relative;width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid #ddd;flex-shrink:0;background:#f0f0f0;display:flex;align-items:center;justify-content:center;';
+            imgWrapper.innerHTML = '<i class="fas fa-spinner fa-spin" style="font-size:24px;color:#C9A84C;"></i>';
+            imagePreview.appendChild(imgWrapper);
+            
+            // ✅ رفع الصورة مع معرف العقار
+            const imageUrl = await uploadImageToCloudinary(file, propertyId);
+            
+            if (imageUrl) {
+                imgWrapper.innerHTML = '';
                 const img = document.createElement('img');
-                img.src = imgData;
-                img.style.width = '100%';
-                img.style.height = '100%';
-                img.style.objectFit = 'cover';
+                img.src = imageUrl;
+                img.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                imgWrapper.appendChild(img);
                 
+                // زر حذف
                 const removeBtn = document.createElement('button');
                 removeBtn.innerHTML = '×';
-                removeBtn.style.position = 'absolute';
-                removeBtn.style.top = '2px';
-                removeBtn.style.right = '2px';
-                removeBtn.style.background = 'rgba(231,76,60,0.9)';
-                removeBtn.style.color = 'white';
-                removeBtn.style.border = 'none';
-                removeBtn.style.borderRadius = '50%';
-                removeBtn.style.width = '22px';
-                removeBtn.style.height = '22px';
-                removeBtn.style.cursor = 'pointer';
-                removeBtn.style.fontSize = '14px';
-                removeBtn.style.display = 'flex';
-                removeBtn.style.alignItems = 'center';
-                removeBtn.style.justifyContent = 'center';
-                
-                removeBtn.addEventListener('click', function(e) {
+                removeBtn.style.cssText = 'position:absolute;top:2px;right:2px;background:rgba(231,76,60,0.9);color:white;border:none;border-radius:50%;width:22px;height:22px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;z-index:5;';
+                removeBtn.onclick = function(e) {
                     e.stopPropagation();
-                    const index = uploadedImages.indexOf(imgData);
+                    const index = currentImages.indexOf(imageUrl);
                     if (index > -1) {
-                        uploadedImages.splice(index, 1);
+                        currentImages.splice(index, 1);
+                        imagesHidden.value = JSON.stringify(currentImages);
                     }
                     imgWrapper.remove();
-                    updateHiddenImages();
-                });
-                
-                imgWrapper.appendChild(img);
+                };
                 imgWrapper.appendChild(removeBtn);
-                imagePreview.appendChild(imgWrapper);
                 
-                updateHiddenImages();
-            };
-            reader.readAsDataURL(file);
+                currentImages.push(imageUrl);
+                imagesHidden.value = JSON.stringify(currentImages);
+                successCount++;
+                console.log(`✅ رفع: ${file.name}`);
+            } else {
+                imgWrapper.innerHTML = '<i class="fas fa-exclamation-circle" style="font-size:24px;color:#e74c3c;"></i>';
+                setTimeout(() => {
+                    if (imgWrapper.parentNode) imgWrapper.remove();
+                }, 3000);
+            }
         }
-    }
+        
+        if (successCount > 0) {
+            showToast(`✅ تم رفع ${successCount} صورة بنجاح`, 'success');
+        } else {
+            showToast('❌ فشل رفع الصور، تأكد من إعدادات Cloudinary', 'error');
+        }
+    } // ✅ إغلاق دالة handleUploadedFiles
+} // ✅ إغلاق if
+else {
+    console.error('❌ عناصر رفع الصور غير موجودة');
+} // ✅ إغلاق else
 
-    function updateHiddenImages() {
-        imagesHidden.value = uploadedImages.join(',');
-    }
-});
-
-// إرسال طلب إضافة العقار إلى Google Sheets
-function submitAddProperty(event) {
+async function submitAddProperty(event) {
     event.preventDefault();
-    
-    const ownerName = document.getElementById('ownerName')?.value.trim() || '';
-    const ownerPhone = document.getElementById('ownerPhone')?.value.trim() || '';
-    const title = document.getElementById('propertyTitle')?.value.trim() || '';
-    const price = document.getElementById('propertyPrice')?.value.trim() || '';
-    const type = document.getElementById('propertyType')?.value || '';
-    const area = document.getElementById('propertyArea')?.value.trim() || '';
-    const governorate = document.getElementById('propertyGovernorate')?.value || '';
-    const district = document.getElementById('propertyDistrict')?.value.trim() || '';
-    const ownership = document.getElementById('propertyOwnership')?.value || '';
-    const rooms = document.getElementById('propertyRooms')?.value.trim() || '';
-    const bathrooms = document.getElementById('propertyBathrooms')?.value.trim() || '';
-    const finishing = document.getElementById('propertyFinishing')?.value || '';
-    const description = document.getElementById('propertyDescription')?.value.trim() || '';
-    const images = document.getElementById('propertyImages')?.value || '';
-    const mapLink = document.getElementById('propertyMap')?.value.trim() || '';
-    
-    if (!ownerName || !ownerPhone || !title || !price || !type || !area || !governorate || !district || !ownership) {
-        showToast('❌ يرجى تعبئة جميع الحقول المطلوبة', 'error');
+
+    // جلب جميع الحقول
+    const fields = {
+        ownerName: document.getElementById('ownerName')?.value?.trim() || '',
+        ownerPhone: document.getElementById('ownerPhone')?.value?.trim() || '',
+        title: document.getElementById('propertyTitle')?.value?.trim() || '',
+        price: document.getElementById('propertyPrice')?.value?.trim() || '',
+        type: document.getElementById('propertyType')?.value || '',
+        area: document.getElementById('propertyArea')?.value?.trim() || '',
+        governorate: document.getElementById('propertyGovernorate')?.value || '',
+        district: document.getElementById('propertyDistrict')?.value?.trim() || '',
+        ownership: document.getElementById('propertyOwnership')?.value || '',
+        rooms: document.getElementById('propertyRooms')?.value?.trim() || '',
+        bathrooms: document.getElementById('propertyBathrooms')?.value?.trim() || '',
+        finishing: document.getElementById('propertyFinishing')?.value || '',
+        description: document.getElementById('propertyDescription')?.value?.trim() || '',
+        images: document.getElementById('propertyImages')?.value || '',
+        mapLink: document.getElementById('propertyMap')?.value?.trim() || ''
+    };
+
+    console.log('📋 القيم المدخلة:', fields);
+
+    // ============================================================
+    // ✅ 1. التحقق من الحقول المطلوبة (غير فارغة)
+    // ============================================================
+    const requiredFields = [
+        'ownerName', 'ownerPhone', 'title', 'type', 'area',
+        'governorate', 'district', 'ownership', 'rooms', 'bathrooms', 'finishing'
+    ];
+
+    const missingFields = requiredFields.filter(field => {
+        const value = fields[field];
+        return value === '' || value === null || value === undefined;
+    });
+
+    if (missingFields.length > 0) {
+        const fieldNames = {
+            ownerName: 'الاسم',
+            ownerPhone: 'الهاتف',
+            title: 'اسم العقار',
+            type: 'نوع العقار',
+            area: 'المساحة',
+            governorate: 'المحافظة',
+            district: 'المنطقة',
+            ownership: 'نوع الملكية',
+            rooms: 'عدد الغرف',
+            bathrooms: 'عدد الحمامات',
+            finishing: 'نوع التشطيب'
+        };
+        const missingNames = missingFields.map(f => fieldNames[f] || f).join('، ');
+        showToast(`❌ يرجى تعبئة الحقول التالية: ${missingNames}`, 'error');
         return;
     }
-    
-    const message = encodeURIComponent(
-        `📋 طلب إضافة عقار جديد\n\n` +
-        `👤 المالك: ${ownerName}\n` +
-        `📞 الهاتف: ${ownerPhone}\n\n` +
-        `🏠 عنوان العقار: ${title}\n` +
-        `💰 السعر: ${price}\n` +
-        `🏗️ النوع: ${type}\n` +
-        `📐 المساحة: ${area} م²\n` +
-        `📍 المحافظة: ${governorate}\n` +
-        `📍 المنطقة: ${district}\n` +
-        `📄 نوع الملكية: ${ownership}\n` +
-        `🛏️ الغرف: ${rooms || 'غير محدد'}\n` +
-        `🚿 الحمامات: ${bathrooms || 'غير محدد'}\n` +
-        `🔧 التشطيب: ${finishing || 'غير محدد'}\n` +
-        `📝 الوصف: ${description || 'لا يوجد'}\n` +
-        `🖼️ الصور: ${images ? 'تم رفع ' + images.split(',').length + ' صورة' : 'لا توجد'}\n` +
-        `🗺️ رابط الخريطة: ${mapLink || 'لا يوجد'}`
-    );
-    
-    const whatsappUrl = `https://wa.me/${CONFIG.WHATSAPP}?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-    
-    closeAddPropertyModal();
-    document.getElementById('addPropertyForm')?.reset();
-    document.getElementById('imagePreview').innerHTML = '';
-    document.getElementById('propertyImages').value = '';
-    
-    showToast('✅ تم إرسال طلبك بنجاح، سنتواصل معك قريباً', 'success');
+
+    // ============================================================
+    // ✅ 2. التحقق من صحة الاسم (حروف فقط)
+    // ============================================================
+    const nameRegex = /^[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFFa-zA-Z\s\-\.]+$/;
+    if (!nameRegex.test(fields.ownerName)) {
+        showToast('❌ الاسم يجب أن يحتوي على حروف فقط (عربية أو إنجليزية)', 'error');
+        return;
+    }
+    if (fields.ownerName.length < 2) {
+        showToast('❌ الاسم يجب أن يكون حرفين على الأقل', 'error');
+        return;
+    }
+
+    // ============================================================
+    // ✅ 3. التحقق من صحة رقم الهاتف (أرقام فقط)
+    // ============================================================
+    const phoneRegex = /^[0-9]{7,15}$/;
+    const cleanPhone = fields.ownerPhone.replace(/^0+/, '').replace(/[^0-9]/g, '');
+    if (!phoneRegex.test(cleanPhone)) {
+        showToast('❌ رقم الهاتف يجب أن يحتوي على 7-15 رقم فقط (بدون حروف أو رموز)', 'error');
+        return;
+    }
+
+    // ============================================================
+    // ✅ 4. التحقق من صحة المساحة (رقم موجب)
+    // ============================================================
+    const areaNum = Number(fields.area);
+    if (isNaN(areaNum) || areaNum <= 0) {
+        showToast('❌ المساحة يجب أن تكون رقماً موجباً (أكبر من 0)', 'error');
+        return;
+    }
+
+    // ============================================================
+    // ✅ 5. التحقق من صحة عدد الغرف (عدد صحيح غير سالب)
+    // ============================================================
+    const roomsNum = Number(fields.rooms);
+    if (isNaN(roomsNum) || roomsNum < 0 || !Number.isInteger(roomsNum)) {
+        showToast('❌ عدد الغرف يجب أن يكون عدداً صحيحاً غير سالب (0, 1, 2, ...)', 'error');
+        return;
+    }
+
+    // ============================================================
+    // ✅ 6. التحقق من صحة عدد الحمامات (عدد صحيح غير سالب)
+    // ============================================================
+    const bathroomsNum = Number(fields.bathrooms);
+    if (isNaN(bathroomsNum) || bathroomsNum < 0 || !Number.isInteger(bathroomsNum)) {
+        showToast('❌ عدد الحمامات يجب أن يكون عدداً صحيحاً غير سالب (0, 1, 2, ...)', 'error');
+        return;
+    }
+
+    // ============================================================
+    // ✅ 7. التحقق من صحة السعر (إذا كان رقمياً)
+    // ============================================================
+    if (fields.price && fields.price.trim() !== '') {
+        // إزالة أي رموز غير رقمية باستثناء النقطة والفاصلة
+        const cleanPrice = fields.price.replace(/[^0-9.]/g, '');
+        if (cleanPrice && !isNaN(Number(cleanPrice))) {
+            const priceNum = Number(cleanPrice);
+            if (priceNum < 0) {
+                showToast('❌ السعر لا يمكن أن يكون سالباً', 'error');
+                return;
+            }
+        }
+        // إذا كان السعر نصياً (مثل "اتصل بنا")، نسمح به
+    }
+
+    // ============================================================
+    // ✅ جميع التحققات نجحت ✅
+    // ============================================================
+
+    // تعطيل الزر
+    const submitBtn = document.querySelector('#addPropertyForm .submit-btn');
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
+    }
+
+    showToast('📤 جاري إرسال طلبك...', 'info');
+
+    try {
+        // ✅ إرسال كـ JSON
+        const response = await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'addProperty',
+                ownerName: fields.ownerName,
+                ownerPhone: cleanPhone,
+                propertyTitle: fields.title,
+                propertyPrice: fields.price || 'غير محدد',
+                propertyType: fields.type,
+                propertyArea: fields.area,
+                governorate: fields.governorate,
+                district: fields.district,
+                ownership: fields.ownership,
+                rooms: fields.rooms || 'غير محدد',
+                bathrooms: fields.bathrooms || 'غير محدد',
+                finishing: fields.finishing || 'غير محدد',
+                description: fields.description || 'لا يوجد',
+                images: fields.images || 'لا توجد',
+                mapLink: fields.mapLink || 'لا يوجد',
+                commission: '2%',
+                timestamp: new Date().toISOString()
+            })
+        });
+
+        console.log('✅ تم إرسال طلب إضافة العقار إلى Google Sheets (JSON)');
+
+        showToast('✅ تم إرسال طلبك بنجاح، سيتم مراجعته قريباً (نسبة العمولة: 2%)', 'success');
+
+        // إعادة تعيين النموذج
+        document.getElementById('addPropertyForm')?.reset();
+        document.getElementById('imagePreview').innerHTML = '';
+        document.getElementById('propertyImages').value = '';
+
+        // إغلاق المودال بعد ثانيتين
+        setTimeout(() => {
+            closeAddPropertyModal();
+        }, 2000);
+
+    } catch (error) {
+        console.error('❌ خطأ في إرسال الطلب:', error);
+        showToast('❌ حدث خطأ، يرجى المحاولة مرة أخرى', 'error');
+    } finally {
+        // إعادة تمكين الزر
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> <span data-i18n="add_property_submit">إرسال طلب الإضافة</span>';
+        }
+    }
 }
 
 // ============================================================
