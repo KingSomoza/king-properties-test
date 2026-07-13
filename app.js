@@ -10,7 +10,7 @@ const CONFIG = {
     API_URL: 'https://script.google.com/macros/s/AKfycbwWceDQFxAM4xHNgkkGEcmdpNvVvBy9UoTMNb6tRBSRYthMB--z8aZEdyoREcqosBSc/exec'
 };
 
-const DEFAULT_IMAGE = 'https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png';
+const DEFAULT_IMAGE = 'https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png';
 
 // ============================================================
 // إعدادات Cloudinary
@@ -695,25 +695,20 @@ function refreshAllFilters() {
     translateRentPriceFilter();
     translateFloorFilter();
     
-    // ترجمة فلتر مدة الإيجار
+    // ترجمة فلتر مدة الإيجار - دعم جميع الصيغ
     const rentPeriodSelect = document.getElementById('filterRentPeriod');
     if (rentPeriodSelect) {
         const selectedValue = rentPeriodSelect.value;
-        if (rentPeriodSelect.options[0]) {
-            rentPeriodSelect.options[0].text = currentLanguage === 'ar' ? 'الكل' : 'All';
-        }
-        const periodOptions = [
-            { value: 'month', ar: 'شهرياً', en: 'Monthly' },
-            { value: 'year', ar: 'سنوياً', en: 'Yearly' },
-            { value: 'week', ar: 'أسبوعياً', en: 'Weekly' }
-        ];
-        periodOptions.forEach((opt, index) => {
-            const optionIndex = index + 1;
-            if (rentPeriodSelect.options[optionIndex]) {
-                rentPeriodSelect.options[optionIndex].text = currentLanguage === 'ar' ? opt.ar : opt.en;
-            }
-        });
-        if (selectedValue && ['month', 'year', 'week'].includes(selectedValue)) {
+        // إعادة تعيين الخيارات مع دعم جميع الصيغ
+        rentPeriodSelect.innerHTML = `
+            <option value="">${currentLanguage === 'ar' ? 'الكل' : 'All'}</option>
+            <option value="monthly">${currentLanguage === 'ar' ? 'شهرياً' : 'Monthly'}</option>
+            <option value="yearly">${currentLanguage === 'ar' ? 'سنوياً' : 'Yearly'}</option>
+            <option value="weekly">${currentLanguage === 'ar' ? 'أسبوعياً' : 'Weekly'}</option>
+            <option value="daily">${currentLanguage === 'ar' ? 'يومياً' : 'Daily'}</option>
+        `;
+        // استعادة القيمة المحددة إذا كانت موجودة
+        if (selectedValue && ['monthly', 'yearly', 'weekly', 'daily'].includes(selectedValue)) {
             rentPeriodSelect.value = selectedValue;
         } else {
             rentPeriodSelect.value = '';
@@ -828,10 +823,18 @@ function filterProperties() {
         if (floor && p.floor !== parseInt(floor)) return false;
         if (rooms && p.rooms < parseInt(rooms)) return false;
         if (code && !p.id.toUpperCase().includes(code)) return false;
-        if (rentPeriod && p.type === 'rent' && p.rent_period !== rentPeriod) return false;
-        if (rentPeriod && p.type !== 'rent') return false;
         
-        // 2. فلتر السعر (للبيع) - يطبق فقط إذا تم اختيار فلتر سعر البيع
+        // 2. فلتر مدة الإيجار - دعم جميع الصيغ
+        if (rentPeriod) {
+            // التحقق من أن العقار للإيجار
+            if (p.type !== 'rent') return false;
+            // تحويل قيم العقار والفلتر إلى حروف صغيرة للمقارنة
+            const propertyPeriod = String(p.rent_period || '').toLowerCase().trim();
+            const filterPeriod = String(rentPeriod).toLowerCase().trim();
+            if (propertyPeriod !== filterPeriod) return false;
+        }
+        
+        // 3. فلتر السعر (للبيع) - يطبق فقط إذا تم اختيار فلتر سعر البيع
         if (salePrice && salePrice !== '') {
             // إذا تم اختيار فلتر سعر البيع، يجب أن يكون العقار للبيع
             if (p.type !== 'sale') {
@@ -847,7 +850,7 @@ function filterProperties() {
             }
         }
         
-        // 3. فلتر السعر (للإيجار) - يطبق فقط إذا تم اختيار فلتر سعر الإيجار
+        // 4. فلتر السعر (للإيجار) - يطبق فقط إذا تم اختيار فلتر سعر الإيجار
         if (rentPrice && rentPrice !== '') {
             // إذا تم اختيار فلتر سعر الإيجار، يجب أن يكون العقار للإيجار
             if (p.type !== 'rent') {
@@ -868,9 +871,9 @@ function filterProperties() {
     updateResultsCount();
     
     if (filteredProperties.length === 0) {
-        showToast('لا توجد عقارات تطابق معايير البحث', 'error');
+        showToast(currentLanguage === 'ar' ? 'لا توجد عقارات تطابق معايير البحث' : 'No properties match your search criteria', 'error');
     } else {
-        showToast(`✅ تم العثور على ${filteredProperties.length} عقار`, 'success');
+        showToast(`✅ ${currentLanguage === 'ar' ? 'تم العثور على' : 'Found'} ${filteredProperties.length} ${currentLanguage === 'ar' ? 'عقار' : 'properties'}`, 'success');
     }
 }
 
@@ -974,7 +977,43 @@ function createPropertyCard(p) {
     // ✅ بناء عنصر الوسائط المناسب
     let mediaHtml = '';
     if (isFirstVideo) {
-        mediaHtml = `<video class="card-main-video" src="${firstMedia}" muted loop playsinline autoplay style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;"></video>`;
+        // ✅ عرض صورة ثابتة (بوستر) بدلاً من الفيديو، مع زر تشغيل
+        // استخدام أول صورة في المصفوفة كبوستر (أو يمكن استخدام صورة افتراضية)
+        const posterImage = imagesArray.length > 1 ? imagesArray[1] : DEFAULT_IMAGE;
+        
+        mediaHtml = `
+            <div class="video-wrapper" style="position:relative;width:100%;height:100%;background:#0a0a0a;cursor:pointer;" onclick="loadAndPlayCardVideo(this, '${firstMedia}')">
+                <img class="video-poster" src="${posterImage}" alt="الفيديو" style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;">
+                <div class="video-play-overlay" style="
+                    position:absolute;
+                    top:0;
+                    left:0;
+                    width:100%;
+                    height:100%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    background:rgba(0,0,0,0.3);
+                    transition:all 0.3s ease;
+                ">
+                    <div class="play-btn-circle" style="
+                        background:rgba(0,0,0,0.7);
+                        border:3px solid rgba(255,255,255,0.3);
+                        border-radius:50%;
+                        width:60px;
+                        height:60px;
+                        display:flex;
+                        align-items:center;
+                        justify-content:center;
+                        transition:all 0.3s ease;
+                        backdrop-filter:blur(4px);
+                    ">
+                        <i class="fas fa-play" style="color:white;font-size:24px;margin-left:4px;"></i>
+                    </div>
+                </div>
+                <video class="card-main-video" src="${firstMedia}" muted loop playsinline style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;display:none;"></video>
+            </div>
+        `;
     } else {
         mediaHtml = `<img class="card-main-img" src="${firstMedia}" alt="${title}" loading="lazy" style="width:100%;height:100%;object-fit:contain;background:#0a0a0a;">`;
     }
@@ -1000,7 +1039,7 @@ function createPropertyCard(p) {
             <div class="card-specs">
                 <div class="spec-item"><i class="fas fa-ruler-combined spec-icon"></i><span class="spec-value">${p.area}</span><span> ${currentLanguage === 'ar' ? 'م²' : 'm²'}</span></div>
                 <div class="spec-item"><i class="fas fa-door-open spec-icon"></i><span class="spec-value">${p.rooms}</span><span>${currentLanguage === 'ar' ? 'غرف' : 'rooms'}</span></div>
-                <div class="spec-item"><i class="fas fa-layer-group spec-icon"></i><span class="spec-value">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span><span>${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span></div>
+                <div class="spec-item"><i class="fas fa-layer-group spec-icon"></i><span class="spec-value">${getFloorText(p.floor)}</span><span>${currentLanguage === 'ar' ? 'طابق' : 'floor'}</span></div>
             </div>
             <div class="card-footer">
                 <div class="card-price">
@@ -1013,6 +1052,83 @@ function createPropertyCard(p) {
             </div>
         </div>
     </div>`;
+}
+
+// ✅ تحميل وتشغيل الفيديو عند الضغط على زر التشغيل
+function loadAndPlayCardVideo(wrapper, videoSrc) {
+    // منع الضغط المتكرر
+    if (wrapper.dataset.loading === 'true') return;
+    wrapper.dataset.loading = 'true';
+    
+    // إخفاء البوستر والتراكب
+    const poster = wrapper.querySelector('.video-poster');
+    const overlay = wrapper.querySelector('.video-play-overlay');
+    const video = wrapper.querySelector('.card-main-video');
+    
+    if (!video) return;
+    
+    // إظهار الفيديو
+    video.style.display = 'block';
+    
+    // إخفاء البوستر والتراكب
+    if (poster) poster.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+    
+    // تحميل الفيديو وتشغيله
+    video.load(); // يبدأ التحميل الآن فقط
+    video.play().catch(function(error) {
+        console.log('تشغيل الفيديو تطلب تفاعل المستخدم:', error);
+        // إذا فشل التشغيل، حاول مرة أخرى عند النقر
+        video.addEventListener('click', function() {
+            video.play();
+        }, { once: true });
+    });
+    
+    // إزالة خاصية التحميل
+    wrapper.dataset.loading = 'false';
+}
+
+// ✅ دالة تشغيل/إيقاف الفيديو في البطاقة
+function toggleCardVideo(button) {
+    const wrapper = button.closest('.video-wrapper');
+    if (!wrapper) return;
+    
+    const video = wrapper.querySelector('.card-main-video');
+    if (!video) return;
+    
+    // إظهار الفيديو إذا كان مخفياً
+    if (video.style.display === 'none') {
+        video.style.display = 'block';
+    }
+    
+    if (video.paused) {
+        video.play();
+        button.innerHTML = '<i class="fas fa-pause" style="color:white;font-size:24px;"></i>';
+        button.style.background = 'rgba(201,168,76,0.8)';
+        button.style.borderColor = 'var(--primary)';
+    } else {
+        video.pause();
+        button.innerHTML = '<i class="fas fa-play" style="color:white;font-size:24px;margin-left:4px;"></i>';
+        button.style.background = 'rgba(0,0,0,0.7)';
+        button.style.borderColor = 'rgba(255,255,255,0.3)';
+    }
+}
+
+// ✅ عند تغيير الصورة في البطاقة، تأكد من إعادة تعيين زر التشغيل
+function resetVideoPlayButton(card) {
+    const wrapper = card.querySelector('.video-wrapper');
+    if (!wrapper) return;
+    
+    const video = wrapper.querySelector('.card-main-video');
+    const button = wrapper.querySelector('.video-play-btn');
+    
+    if (video && button) {
+        video.pause();
+        video.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-play" style="color:white;font-size:24px;margin-left:4px;"></i>';
+        button.style.background = 'rgba(0,0,0,0.7)';
+        button.style.borderColor = 'rgba(255,255,255,0.3)';
+    }
 }
 
 function renderProperties() {
@@ -1074,12 +1190,16 @@ function nextCardImage(e) {
     e.stopPropagation();
     const card = e.currentTarget.closest('.property-card');
     if (!card) return;
-    const mediaElement = card.querySelector('.card-main-img, .card-main-video');
+    
+    const imagesDiv = card.querySelector('.card-images');
+    if (!imagesDiv) return;
+    
     let images = card.dataset.images;
     if (!images) return;
     let imagesArray;
     try { imagesArray = JSON.parse(images); } catch { return; }
     if (!imagesArray.length) return;
+    
     let currentIndex = parseInt(card.dataset.currentImg) || 0;
     currentIndex = (currentIndex + 1) % imagesArray.length;
     card.dataset.currentImg = currentIndex;
@@ -1087,16 +1207,177 @@ function nextCardImage(e) {
     const mediaUrl = imagesArray[currentIndex];
     const isVideo = isVideoUrl(mediaUrl);
     
+    // ✅ إزالة العنصر القديم
+    const oldWrapper = imagesDiv.querySelector('.video-wrapper');
+    const oldImg = imagesDiv.querySelector('.card-main-img');
+    if (oldWrapper) oldWrapper.remove();
+    if (oldImg) oldImg.remove();
+    
     if (isVideo) {
+        // ✅ إنشاء فيديو مع بوستر
+        const posterImage = imagesArray.length > (currentIndex + 1) ? imagesArray[currentIndex + 1] : DEFAULT_IMAGE;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'video-wrapper';
+        wrapper.style.cssText = 'position:relative;width:100%;height:100%;background:#0a0a0a;cursor:pointer;';
+        wrapper.onclick = function() { loadAndPlayCardVideo(this, mediaUrl); };
+        
+        // البوستر
+        const poster = document.createElement('img');
+        poster.className = 'video-poster';
+        poster.src = posterImage;
+        poster.alt = 'الفيديو';
+        poster.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        
+        // تراكب زر التشغيل
+        const overlay = document.createElement('div');
+        overlay.className = 'video-play-overlay';
+        overlay.style.cssText = `
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(0,0,0,0.3);
+            transition:all 0.3s ease;
+        `;
+        overlay.innerHTML = `
+            <div style="
+                background:rgba(0,0,0,0.7);
+                border:3px solid rgba(255,255,255,0.3);
+                border-radius:50%;
+                width:60px;
+                height:60px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                transition:all 0.3s ease;
+                backdrop-filter:blur(4px);
+            ">
+                <i class="fas fa-play" style="color:white;font-size:24px;margin-left:4px;"></i>
+            </div>
+        `;
+        
+        // الفيديو (مخفي)
         const video = document.createElement('video');
         video.className = 'card-main-video';
         video.src = mediaUrl;
         video.muted = true;
         video.loop = true;
         video.playsinline = true;
-        video.autoplay = true;
-        video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
-        mediaElement.replaceWith(video);
+        video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;display:none;';
+        
+        wrapper.appendChild(poster);
+        wrapper.appendChild(overlay);
+        wrapper.appendChild(video);
+        imagesDiv.appendChild(wrapper);
+        
+    } else {
+        // ✅ صورة عادية
+        const img = document.createElement('img');
+        img.className = 'card-main-img';
+        img.src = mediaUrl;
+        img.alt = '';
+        img.loading = 'lazy';
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        imagesDiv.appendChild(img);
+    }
+    
+    // تحديث النقاط
+    const dots = card.querySelectorAll('.img-dot');
+    dots.forEach((dot, i) => dot.classList.toggle('active', i === currentIndex));
+}
+
+// ✅ نفس التعديل لـ prevCardImage
+function prevCardImage(e) {
+    e.stopPropagation();
+    const card = e.currentTarget.closest('.property-card');
+    if (!card) return;
+    
+    const imagesDiv = card.querySelector('.card-images');
+    if (!imagesDiv) return;
+    
+    let images = card.dataset.images;
+    if (!images) return;
+    let imagesArray;
+    try { imagesArray = JSON.parse(images); } catch { return; }
+    if (!imagesArray.length) return;
+    
+    let currentIndex = parseInt(card.dataset.currentImg) || 0;
+    currentIndex = (currentIndex - 1 + imagesArray.length) % imagesArray.length;
+    card.dataset.currentImg = currentIndex;
+    
+    const mediaUrl = imagesArray[currentIndex];
+    const isVideo = isVideoUrl(mediaUrl);
+    
+    // ✅ إزالة العنصر القديم
+    const oldWrapper = imagesDiv.querySelector('.video-wrapper');
+    const oldImg = imagesDiv.querySelector('.card-main-img');
+    if (oldWrapper) oldWrapper.remove();
+    if (oldImg) oldImg.remove();
+    
+    if (isVideo) {
+        // ✅ إنشاء فيديو مع بوستر
+        const posterImage = imagesArray.length > (currentIndex + 1) ? imagesArray[currentIndex + 1] : DEFAULT_IMAGE;
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'video-wrapper';
+        wrapper.style.cssText = 'position:relative;width:100%;height:100%;background:#0a0a0a;cursor:pointer;';
+        wrapper.onclick = function() { loadAndPlayCardVideo(this, mediaUrl); };
+        
+        const poster = document.createElement('img');
+        poster.className = 'video-poster';
+        poster.src = posterImage;
+        poster.alt = 'الفيديو';
+        poster.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
+        
+        const overlay = document.createElement('div');
+        overlay.className = 'video-play-overlay';
+        overlay.style.cssText = `
+            position:absolute;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:rgba(0,0,0,0.3);
+            transition:all 0.3s ease;
+        `;
+        overlay.innerHTML = `
+            <div style="
+                background:rgba(0,0,0,0.7);
+                border:3px solid rgba(255,255,255,0.3);
+                border-radius:50%;
+                width:60px;
+                height:60px;
+                display:flex;
+                align-items:center;
+                justify-content:center;
+                transition:all 0.3s ease;
+                backdrop-filter:blur(4px);
+            ">
+                <i class="fas fa-play" style="color:white;font-size:24px;margin-left:4px;"></i>
+            </div>
+        `;
+        
+        const video = document.createElement('video');
+        video.className = 'card-main-video';
+        video.src = mediaUrl;
+        video.muted = true;
+        video.loop = true;
+        video.playsinline = true;
+        video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;display:none;';
+        
+        wrapper.appendChild(poster);
+        wrapper.appendChild(overlay);
+        wrapper.appendChild(video);
+        imagesDiv.appendChild(wrapper);
+        
     } else {
         const img = document.createElement('img');
         img.className = 'card-main-img';
@@ -1104,7 +1385,7 @@ function nextCardImage(e) {
         img.alt = '';
         img.loading = 'lazy';
         img.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#0a0a0a;';
-        mediaElement.replaceWith(img);
+        imagesDiv.appendChild(img);
     }
     
     const dots = card.querySelectorAll('.img-dot');
@@ -1231,7 +1512,7 @@ function dotClickHandler(e) {
 }
 
 // ============================================================
-// 7. دوال الإحصائيات - نظام عداد زوار دقيق
+// 7. دوال الإحصائيات - نظام عداد زوار (no-cors فقط)
 // ============================================================
 
 async function initStats() {
@@ -1241,39 +1522,240 @@ async function initStats() {
     
     updateStatsUI(visitors, contacts);
     
-    // جلب العداد من الخادم
-    await fetchVisitorCount();
-    
-    // جلب عدد الاستفسارات
-    fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`)
-        .then(res => res.json())
-        .then(data => {
-            if (data && data.count) {
-                contacts = data.count;
-                localStorage.setItem('kh_contacts_total', contacts);
-                updateStatsUI(visitors, contacts);
-            }
-        })
-        .catch(err => console.error('خطأ في جلب الاستفسارات:', err));
+    // محاولة جلب البيانات من الخادم (بدون انتظار)
+    fetchVisitorCount().catch(() => {});
+    fetchContactsCount().catch(() => {});
 }
 
-// دالة جلب عدد الزوار من الخادم
+// دالة جلب عدد الزوار من الخادم - مع no-cors
 async function fetchVisitorCount() {
     try {
-        // ✅ استخدام no-cors للحصول على البيانات
-        const response = await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
             mode: 'no-cors'
         });
-        
-        // مع no-cors، لا يمكن قراءة الرد، لذا نستخدم localStorage مؤقتاً
+        // لا يمكن قراءة الرد مع no-cors، نستخدم localStorage
         const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-        console.log(`📊 عدد الزوار الحالي (من localStorage): ${visitors}`);
         return visitors;
-        
     } catch (error) {
         console.error('❌ خطأ في جلب عدد الزوار:', error);
         return parseInt(localStorage.getItem('kh_visitors_total') || '0');
     }
+}
+
+// دالة جلب عدد الاستفسارات - مع no-cors
+async function fetchContactsCount() {
+    try {
+        await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        return contacts;
+    } catch (error) {
+        console.error('❌ خطأ في جلب الاستفسارات:', error);
+        return parseInt(localStorage.getItem('kh_contacts_total') || '0');
+    }
+}
+
+// دالة زيادة عدد الزوار - مع no-cors فقط
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد`);
+        return false;
+    }
+    
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        
+        // تحديث العداد محلياً
+        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const newCount = currentCount + 1;
+        localStorage.setItem('kh_visitors_total', newCount);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات - مع no-cors فقط
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
+        
+        // تحديث محلي
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
+function updateStatsUI(visitors, contacts) {
+    const available = allProperties.filter(p => p.available).length;
+    const sold = allProperties.filter(p => !p.available).length;
+    
+    // تحديث العناصر
+    const elements = {
+        heroAvailable: available,
+        heroSold: sold,
+        heroVisitors: visitors,
+        statsAvailable: available,
+        statsSold: sold,
+        statsVisitors: visitors,
+        statsContacts: contacts,
+        totalVisitors: visitors
+    };
+    
+    Object.entries(elements).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.innerText = value;
+    });
+}
+
+// دالة تحديث الإحصائيات التلقائية
+async function autoRefreshStats() {
+    console.log('🔄 جاري تحديث الإحصائيات...');
+    try {
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(visitors, contacts);
+        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
+    } catch (error) {
+        console.error('❌ فشل تحديث الإحصائيات:', error);
+    }
+    setTimeout(autoRefreshStats, 300000);
+}
+
+// بدء التحديث التلقائي
+autoRefreshStats();
+// دالة جلب عدد الزوار من الخادم - مع no-cors
+async function fetchVisitorCount() {
+    try {
+        // ✅ استخدام no-cors (لا يمكن قراءة الرد، لكن الطلب يصل)
+        await fetch(`${CONFIG.API_URL}?action=getVisitorCount&_=${Date.now()}`, {
+            mode: 'no-cors'
+        });
+        
+        // نظراً لأننا لا نستطيع قراءة الرد، نستخدم localStorage
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        console.log(`📊 عدد الزوار من localStorage: ${visitors}`);
+        return visitors;
+        
+    } catch (error) {
+        console.error('❌ خطأ في جلب عدد الزوار:', error);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        return visitors;
+    }
+}
+
+// دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق - مع no-cors
+async function incrementVisitorCount() {
+    const now = Date.now();
+    const lastVisitKey = 'kh_last_visit_time';
+    const lastVisitTime = parseInt(localStorage.getItem(lastVisitKey) || '0');
+    const fiveMinutes = 5 * 60 * 1000;
+    
+    if (now - lastVisitTime < fiveMinutes) {
+        console.log(`⏳ لم تمر 5 دقائق بعد`);
+        return false;
+    }
+    
+    localStorage.setItem(lastVisitKey, now.toString());
+    
+    try {
+        // ✅ استخدام no-cors (الطلب يصل لكن لا يمكن قراءة الرد)
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'incrementVisitor',
+                timestamp: now
+            })
+        });
+        
+        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        
+        // ✅ تحديث العداد محلياً بزيادة 1
+        const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const newCount = currentCount + 1;
+        localStorage.setItem('kh_visitors_total', newCount);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+        return true;
+        
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        return false;
+    }
+}
+
+// دالة زيادة عدد الاستفسارات - مع no-cors
+async function incrementContactsCount() {
+    try {
+        await fetch(CONFIG.API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'incrementContacts' })
+        });
+        console.log('✅ تم إرسال طلب زيادة الاستفسارات (no-cors)');
+        
+        // تحديث محلي
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+    }
+}
+
+// دالة تحديث الإحصائيات
+async function autoRefreshStats() {
+    console.log('🔄 جاري تحديث الإحصائيات...');
+    try {
+        // استخدام localStorage فقط (بما أن no-cors لا يسمح بقراءة الرد)
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(visitors, contacts);
+        console.log(`✅ تم تحديث الإحصائيات: ${visitors} زائر, ${contacts} استفسار`);
+    } catch (error) {
+        console.error('❌ فشل تحديث الإحصائيات:', error);
+    }
+    setTimeout(autoRefreshStats, 300000);
 }
 
 // دالة زيادة عدد الزوار مع فاصل زمني 5 دقائق
@@ -1293,10 +1775,9 @@ async function incrementVisitorCount() {
     localStorage.setItem(lastVisitKey, now.toString());
     
     try {
-        // ✅ إرسال طلب إلى الخادم لزيادة العداد باستخدام no-cors
-        await fetch(CONFIG.API_URL, {
+        // ✅ استخدام cors بدلاً من no-cors للحصول على الرد
+        const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            mode: 'no-cors',  // ✅ هذا مهم جداً للعمل من الملفات المحلية
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 type: 'incrementVisitor',
@@ -1304,19 +1785,40 @@ async function incrementVisitorCount() {
             })
         });
         
-        console.log('✅ تم إرسال طلب زيادة الزوار (no-cors)');
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
         
-        // ✅ تحديث العداد محلياً بزيادة 1 (نظراً لأننا لا نستطيع قراءة الرد)
+        const data = await response.json();
+        console.log('✅ رد الخادم بعد زيادة الزوار:', data);
+        
+        if (data && data.count !== undefined) {
+            const newCount = parseInt(data.count) || 0;
+            localStorage.setItem('kh_visitors_total', newCount);
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(newCount, contacts);
+            console.log(`📊 العدد الجديد من الخادم: ${newCount}`);
+            return true;
+        } else {
+            // إذا لم يستجب الخادم بشكل صحيح، قم بزيادة محلية
+            const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            const newCount = currentCount + 1;
+            localStorage.setItem('kh_visitors_total', newCount);
+            const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+            updateStatsUI(newCount, contacts);
+            console.log(`📊 العدد الجديد (تقديري محلي): ${newCount}`);
+            return true;
+        }
+    } catch (error) {
+        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        
+        // في حالة الخطأ، قم بزيادة محلية
         const currentCount = parseInt(localStorage.getItem('kh_visitors_total') || '0');
         const newCount = currentCount + 1;
         localStorage.setItem('kh_visitors_total', newCount);
-        updateStatsUI(newCount, parseInt(localStorage.getItem('kh_contacts_total') || '0'));
-        
-        console.log(`📊 العدد الجديد (تقديري): ${newCount}`);
-        return true;
-        
-    } catch (error) {
-        console.error('❌ خطأ في تحديث عدد الزوار:', error);
+        const contacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        updateStatsUI(newCount, contacts);
+        console.log(`📊 العدد الجديد (تقديري محلي بعد الخطأ): ${newCount}`);
         
         // محاولة مرة أخرى بعد 30 ثانية
         setTimeout(() => {
@@ -1331,15 +1833,34 @@ async function incrementVisitorCount() {
 // دالة زيادة عدد الاستفسارات (للمستخدمين الذين يتواصلون)
 async function incrementContactsCount() {
     try {
-        await fetch(CONFIG.API_URL, {
+        const response = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            mode: 'no-cors',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ type: 'incrementContacts' })
         });
-        console.log('✅ تم تحديث عداد الاستفسارات');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('✅ رد الخادم بعد زيادة الاستفسارات:', data);
+        
+        if (data && data.count !== undefined) {
+            const contacts = parseInt(data.count) || 0;
+            localStorage.setItem('kh_contacts_total', contacts);
+            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+            updateStatsUI(visitors, contacts);
+            console.log(`📊 عدد الاستفسارات الجديد: ${contacts}`);
+        }
     } catch (error) {
         console.error('❌ خطأ في تحديث عداد الاستفسارات:', error);
+        // زيادة محلية كحل بديل
+        const currentContacts = parseInt(localStorage.getItem('kh_contacts_total') || '0');
+        const newContacts = currentContacts + 1;
+        localStorage.setItem('kh_contacts_total', newContacts);
+        const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+        updateStatsUI(visitors, newContacts);
     }
 }
 
@@ -1376,16 +1897,22 @@ async function autoRefreshStats() {
         await fetchVisitorCount();
         
         // تحديث عدد الاستفسارات
-        const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
-        const contactsData = await contactsRes.json();
-        if (contactsData && contactsData.count !== undefined) {
-            const contacts = contactsData.count;
-            localStorage.setItem('kh_contacts_total', contacts);
-            const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
-            updateStatsUI(visitors, contacts);
+        try {
+            const contactsRes = await fetch(`${CONFIG.API_URL}?action=getContactsCount&_=${Date.now()}`);
+            const contactsData = await contactsRes.json();
+            if (contactsData && contactsData.count !== undefined) {
+                const contacts = parseInt(contactsData.count) || 0;
+                localStorage.setItem('kh_contacts_total', contacts);
+                const visitors = parseInt(localStorage.getItem('kh_visitors_total') || '0');
+                updateStatsUI(visitors, contacts);
+                console.log(`📊 عدد الاستفسارات من الخادم: ${contacts}`);
+            }
+        } catch (err) {
+            console.error('❌ فشل جلب الاستفسارات:', err);
         }
         
-        console.log(`✅ تم تحديث الإحصائيات`);    } catch (error) {
+        console.log(`✅ تم تحديث الإحصائيات`);
+    } catch (error) {
         console.error('❌ فشل تحديث الإحصائيات، إعادة المحاولة بعد 30 ثانية');
         setTimeout(autoRefreshStats, 30000);
         return;
@@ -1479,18 +2006,17 @@ function toggleFavoriteFromModal() {
 // ============================================================
 
 function openContactModal(propId = null) {
-    // إذا كان هناك معرف عقار، احفظه
     if (propId) {
         document.getElementById('contactPropId').value = propId;
     }
-    
-    // إظهار المودال
     document.getElementById('contactModal').classList.add('active');
+    document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
 }
 
 function closeContactModal() {
     document.getElementById('contactModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
 }
 
@@ -1727,13 +2253,13 @@ function populatePhoneCountrySelect() {
 async function openPropertyModal(id) {
     const p = allProperties.find(x => x.id === id);
     if (!p) return;
-    
-    // تحديث المشاهدات
+
+    // --- 1. تحديث المشاهدات ---
     const storageKey = `kh_view_${id}`;
     const lastViewTime = localStorage.getItem(storageKey);
     const now = Date.now();
     const oneHour = 60 * 60 * 1000;
-    
+
     if (!lastViewTime || (now - parseInt(lastViewTime)) > oneHour) {
         p.views = (p.views || 0) + 1;
         localStorage.setItem(storageKey, now.toString());
@@ -1745,139 +2271,163 @@ async function openPropertyModal(id) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'view', propertyId: id, views: p.views })
             });
-            console.log(`✅ تم إضافة مشاهدة للعقار ${id}. العدد الجديد: ${p.views}`);
         } catch (error) { console.error('❌ خطأ في تحديث المشاهدات:', error); }
     }
-    
+
+    // --- 2. تحديث المتغيرات العامة ---
     currentPropertyId = id;
-    updateMetaTagsForProperty(p);
-    
-    const title = getLocalizedText(p, 'title');
-    const description = getLocalizedText(p, 'description');
-    const city = getLocalizedText(p, 'city');
-    const district = getLocalizedText(p, 'district');
-    const finishing = getLocalizedText(p, 'finishing');
-    const ownership = getLocalizedText(p, 'ownership');
-    const direction = getLocalizedText(p, 'direction');
-    const elevator = getLocalizedText(p, 'elevator');
-    const parking = getLocalizedText(p, 'parking');
-    const t = translations[currentLanguage];
-    
-    document.getElementById('propModalTitle').textContent = title;
-    document.getElementById('propModalCode').innerHTML = `<i class="fas fa-barcode"></i> ${t?.property_code_prefix || 'كود:'} ${p.id}`;
-    document.getElementById('propModalName').textContent = title;
-    
-    const rentPeriodText = (p.type === 'rent') ? ` / ${getRentPeriodText(p.rent_period)}` : '';
-    
-    // عرض السعر في المودال
-    const priceElement = document.getElementById('propModalPrice');
-    if (p.isPriceNumeric) {
-        priceElement.textContent = `${Number(p.price).toLocaleString()} ${p.currency}`;
-        priceElement.style.color = 'var(--primary)';
-        priceElement.style.fontSize = '32px';
-        priceElement.style.fontWeight = '800';
-    } else {
-        priceElement.textContent = p.price;
-        priceElement.style.color = '#e74c3c';
-        priceElement.style.fontSize = '28px';
-        priceElement.style.fontWeight = '800';
-    }
-    
-    document.getElementById('propModalLocation').textContent = district ? `${district} - ${city}` : p.location;
-    document.getElementById('propModalDesc').textContent = description;
-    document.getElementById('propModalType').innerHTML = p.type === 'sale' ? '🏷️ ' + (t?.filter_transaction_sale || 'للبيع') : '🔑 ' + (t?.filter_transaction_rent || 'للإيجار');
-    
-    const viewsEl = document.getElementById('propModalViews');
-    if (viewsEl) viewsEl.innerHTML = `<i class="fas fa-eye"></i> ${p.views} ${t?.property_views || 'مشاهدة'}`;
-    renderProperties();
-    
-    // ✅ تعيين الصور الحالية
     currentPropertyImages = p.images || [];
     currentImageIndex = 0;
 
-    // ✅ تنظيف معرض الصور مع الحفاظ على أزرار التنقل
-    const galleryMain = document.getElementById('galleryMain');
-    if (galleryMain) {
-        // حذف جميع العناصر باستثناء .gallery-nav و .image-counter
-        const children = galleryMain.children;
-        for (let i = children.length - 1; i >= 0; i--) {
-            const child = children[i];
-            if (!child.classList.contains('gallery-nav') && !child.classList.contains('image-counter')) {
-                child.remove();
-            }
-        }
-        
-        // ✅ إذا لم توجد أزرار تنقل، أضفها
-        let galleryNav = galleryMain.querySelector('.gallery-nav');
-        if (!galleryNav) {
-            galleryNav = document.createElement('div');
-            galleryNav.className = 'gallery-nav';
-            galleryNav.innerHTML = `
-                <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
-                    <i class="fas fa-chevron-right"></i>
-                </button>
-                <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
-                    <i class="fas fa-chevron-left"></i>
-                </button>
-            `;
-            galleryMain.appendChild(galleryNav);
-        }
-        
-        // ✅ إذا لم يوجد عداد، أضفه
-        let counter = galleryMain.querySelector('.image-counter');
-        if (!counter) {
-            counter = document.createElement('div');
-            counter.className = 'image-counter';
-            counter.id = 'imageCounter';
-            counter.textContent = '0/0';
-            galleryMain.appendChild(counter);
+    // --- 3. الحصول على النصوص المترجمة ---
+    const t = translations[currentLanguage] || translations.ar;
+
+    // --- 4. تحديث عناصر الـ DOM (مع التحقق من وجودها) ---
+    const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+    };
+    const setHTML = (id, html) => {
+        const el = document.getElementById(id);
+        if (el) el.innerHTML = html;
+    };
+
+    // --- العنوان ---
+    const title = getLocalizedText(p, 'title');
+    setText('propModalTitle', title);
+    setText('propModalName', title);
+
+    // --- نوع العقار والموقع والكود ---
+    const typeEl = document.getElementById('propModalType');
+    if (typeEl) {
+        const typeMap = {
+            'sale': { class: 'badge-sale', icon: 'fa-tag', text: currentLanguage === 'ar' ? 'للبيع' : 'For Sale' },
+            'rent': { class: 'badge-rent', icon: 'fa-key', text: currentLanguage === 'ar' ? 'للإيجار' : 'For Rent' }
+        };
+        const type = typeMap[p.type] || typeMap['sale'];
+        typeEl.className = `meta-badge ${type.class}`;
+        typeEl.innerHTML = `<i class="fas ${type.icon}"></i> ${type.text}`;
+    }
+
+    const locationEl = document.getElementById('propModalLocation');
+    if (locationEl) {
+        const district = getLocalizedText(p, 'district');
+        const city = getLocalizedText(p, 'city');
+        locationEl.textContent = district ? `${district} - ${city}` : city || 'موقع غير محدد';
+    }
+
+    const codeSmall = document.getElementById('propModalCodeSmall');
+    if (codeSmall) codeSmall.textContent = p.id;
+
+    // --- الإحصائيات الصغيرة (مشاهدات + إعجابات) ---
+    const viewsCount = document.getElementById('propModalViewsCount');
+    if (viewsCount) viewsCount.textContent = p.views || 0;
+
+    const favCount = document.getElementById('propModalFavCount');
+    if (favCount) favCount.textContent = p.favCount || 0;
+
+    // --- السعر الذهبي ---
+    const priceElement = document.getElementById('propModalPrice');
+    const currencyElement = document.getElementById('propModalCurrency');
+    const priceExtra = document.getElementById('propModalPriceExtra');
+    const typeLabel = document.getElementById('propModalTypeLabel');
+
+    if (priceElement) {
+        if (p.isPriceNumeric) {
+            priceElement.textContent = Number(p.price).toLocaleString();
+            priceElement.style.color = 'var(--primary)';
+        } else {
+            priceElement.textContent = p.price;
+            priceElement.style.color = '#e74c3c';
         }
     }
 
-    // ✅ تحديث الصورة/الفيديو
-    updateModalImage();
-        
-    // المواصفات
+    if (currencyElement) {
+        currencyElement.textContent = p.currency || '$';
+    }
+
+    if (typeLabel) {
+        typeLabel.textContent = p.type === 'sale' ? 
+            (currentLanguage === 'ar' ? 'للبيع' : 'For Sale') : 
+            (currentLanguage === 'ar' ? 'للإيجار' : 'For Rent');
+    }
+
+    if (priceExtra) {
+        if (p.type === 'rent' && p.rent_period) {
+            priceExtra.textContent = getRentPeriodText(p.rent_period);
+            priceExtra.style.display = 'inline-block';
+        } else {
+            priceExtra.textContent = '';
+            priceExtra.style.display = 'none';
+        }
+    }
+
+    // --- الوصف ---
+    const descEl = document.getElementById('propModalDesc');
+    if (descEl) {
+        descEl.textContent = getLocalizedText(p, 'description') || 'لا يوجد وصف';
+    }
+
+    // --- المواصفات (مع تنسيق محسن) ---
     const specs = document.getElementById('propModalSpecs');
     if (specs) {
-        // تحضير متغيرات السعر
-        const priceDisplay = p.isPriceNumeric ? 
-            `${Number(p.price).toLocaleString()} ${p.currency}` : 
-            p.price;
-        
-        const priceStyle = p.isPriceNumeric ? 
-            'color:#C9A84C;font-size:18px;font-weight:700' : 
-            'color:#e74c3c;font-size:20px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 15px;border-radius:8px';
-        
-        const priceBg = p.isPriceNumeric ? 
-            'rgba(201,168,76,0.1)' : 
-            'rgba(231,76,60,0.1)';
-        
-        const priceBorder = p.isPriceNumeric ? 
-            'none' : 
-            '1px dashed #e74c3c';
-        
+        const finishing = getLocalizedText(p, 'finishing');
+        const ownership = getLocalizedText(p, 'ownership');
+        const direction = getLocalizedText(p, 'direction');
+        const elevator = getLocalizedText(p, 'elevator');
+        const parking = getLocalizedText(p, 'parking');
+
+        const priceDisplay = p.isPriceNumeric ? `${Number(p.price).toLocaleString()} ${p.currency}` : p.price;
+        const priceStyle = p.isPriceNumeric ? 'color:#C9A84C;font-size:18px;font-weight:700' : 'color:#e74c3c;font-size:20px;font-weight:800;background:rgba(231,76,60,0.1);padding:4px 15px;border-radius:8px';
+        const priceBg = p.isPriceNumeric ? 'rgba(201,168,76,0.1)' : 'rgba(231,76,60,0.1)';
+        const priceBorder = p.isPriceNumeric ? 'none' : '1px dashed #e74c3c';
+
         specs.innerHTML = `
-            <div class="spec-item-detail"><i class="fas fa-ruler-combined"></i><div><span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span><span class="spec-value-detail">${p.area} م²</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-door-open"></i><div><span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span><span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-bath"></i><div><span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span><span class="spec-value-detail">${p.bathrooms || '—'}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-layer-group"></i><div><span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span><span class="spec-value-detail">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-arrow-up"></i><div><span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span><span class="spec-value-detail">${elevator}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-compass"></i><div><span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span><span class="spec-value-detail">${direction}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-paint-brush"></i><div><span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span><span class="spec-value-detail">${finishing}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-car"></i><div><span class="spec-label-detail">${t?.property_specs_parking || 'موقف السيارة'}</span><span class="spec-value-detail">${parking}</span></div></div>
-            <div class="spec-item-detail"><i class="fas fa-file-contract"></i><div><span class="spec-label-detail">${t?.property_specs_ownership || 'سند الملكية'}</span><span class="spec-value-detail">${ownership}</span></div></div>
-            <div class="spec-item-detail" style="background:${priceBg};border:${priceBorder}">
-                <i class="fas fa-tag" style="color:${p.isPriceNumeric ? '#C9A84C' : '#e74c3c'}"></i>
-                <div>
-                    <span class="spec-label-detail">${t?.property_specs_price || 'السعر'}</span>
-                    <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
-                </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_area || 'المساحة'}</span>
+                <span class="spec-value-detail">${p.area} م²</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_rooms || 'الغرف'}</span>
+                <span class="spec-value-detail">${p.rooms} ${t?.property_specs_rooms_unit || 'غرف'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_bathrooms || 'الحمامات'}</span>
+                <span class="spec-value-detail">${p.bathrooms || '—'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_floor || 'الطابق'}</span>
+                <span class="spec-value-detail">${p.floor === 0 ? (currentLanguage === 'ar' ? 'أرضي' : 'Ground') : p.floor}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_elevator || 'مصعد'}</span>
+                <span class="spec-value-detail">${elevator || '—'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_direction || 'الاتجاه'}</span>
+                <span class="spec-value-detail">${direction || '—'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_finishing || 'التشطيب'}</span>
+                <span class="spec-value-detail">${finishing || '—'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_parking || 'موقف السيارة'}</span>
+                <span class="spec-value-detail">${parking || '—'}</span>
+            </div>
+            <div class="spec-item-detail">
+                <span class="spec-label-detail">${t?.property_specs_ownership || 'سند الملكية'}</span>
+                <span class="spec-value-detail">${ownership || '—'}</span>
+            </div>
+            <div class="spec-item-detail price-spec" style="background:${priceBg};border:${priceBorder};">
+                <span class="spec-label-detail">${t?.property_specs_price || 'السعر'}</span>
+                <span class="spec-value-detail" style="${priceStyle}">${priceDisplay}</span>
+                ${p.type === 'rent' ? `<span class="spec-period">${getRentPeriodText(p.rent_period)}</span>` : ''}
             </div>
         `;
     }
-    
-    // الخريطة
+
+    // --- الخريطة ---
     const mapDiv = document.getElementById('propModalMap');
     if (mapDiv) {
         const hasValidCoordinates = p.lat && p.lng && p.lat !== 0 && p.lng !== 0;
@@ -1924,8 +2474,8 @@ async function openPropertyModal(id) {
             `;
         }
     }
-    
-    // عقارات مشابهة
+
+    // --- العقارات المشابهة ---
     let similar = allProperties.filter(x => x.id !== id && x.type === p.type && x.available && Math.abs(x.price - p.price) <= (p.price * 0.3));
     if (similar.length < 3) {
         similar = [...similar, ...allProperties.filter(x => x.id !== id && x.type === p.type && x.available && !similar.includes(x))].slice(0, 3);
@@ -1934,49 +2484,135 @@ async function openPropertyModal(id) {
     if (suggDiv) {
         suggDiv.innerHTML = similar.length ? 
             similar.map(s => `<div class="suggestion-card" onclick="openPropertyModal('${s.id}')"><div class="s-title">${getLocalizedText(s, 'title')}</div><div class="s-price">${s.isPriceNumeric ? `${Number(s.price).toLocaleString()} ${s.currency}` : s.price}</div></div>`).join('') : 
-            `<div>${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
+            `<div style="color:var(--gray);text-align:center;padding:20px;">${t?.property_no_similar || 'لا توجد عقارات مشابهة'}</div>`;
     }
-    
-    document.getElementById('propertyModal').classList.add('active');
+
+    // --- عرض الصور في المعرض ---
+    const galleryMain = document.getElementById('galleryMain');
+    if (galleryMain) {
+        // حذف عناصر الوسائط السابقة
+        const children = galleryMain.children;
+        for (let i = children.length - 1; i >= 0; i--) {
+            const child = children[i];
+            if (child.id === 'zoomBtn' || 
+                child.id === 'zoomOverlay' || 
+                child.id === 'imageCounter' || 
+                child.classList.contains('gallery-nav')) {
+                continue;
+            }
+            child.remove();
+        }
+
+        // التأكد من وجود zoomOverlay
+        let zoomOverlay = document.getElementById('zoomOverlay');
+        if (!zoomOverlay) {
+            zoomOverlay = document.createElement('div');
+            zoomOverlay.className = 'zoom-overlay';
+            zoomOverlay.id = 'zoomOverlay';
+            zoomOverlay.onclick = closeZoom;
+            zoomOverlay.innerHTML = `
+                <img id="zoomImage" src="" alt="صورة مكبرة">
+                <video id="zoomVideo" src="" controls style="display:none;"></video>
+                <button class="zoom-close-btn" id="zoomCloseBtn" onclick="closeZoom()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            document.body.appendChild(zoomOverlay);
+        }
+
+        // التأكد من وجود زر التكبير
+        let zoomBtn = document.getElementById('zoomBtn');
+        if (!zoomBtn) {
+            zoomBtn = document.createElement('button');
+            zoomBtn.className = 'zoom-btn';
+            zoomBtn.id = 'zoomBtn';
+            zoomBtn.innerHTML = '<i class="fas fa-expand"></i>';
+            zoomBtn.title = 'تكبير الصورة';
+            zoomBtn.onclick = openZoom;
+            galleryMain.insertBefore(zoomBtn, galleryMain.firstChild);
+        }
+
+        // أزرار التنقل
+        let galleryNav = galleryMain.querySelector('.gallery-nav');
+        if (!galleryNav) {
+            galleryNav = document.createElement('div');
+            galleryNav.className = 'gallery-nav';
+            galleryNav.innerHTML = `
+                <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+            `;
+            galleryMain.appendChild(galleryNav);
+        }
+
+        // عداد الصور
+        let counter = galleryMain.querySelector('.image-counter');
+        if (!counter) {
+            counter = document.createElement('div');
+            counter.className = 'image-counter';
+            counter.id = 'imageCounter';
+            counter.textContent = '0/0';
+            galleryMain.appendChild(counter);
+        }
+
+        // تحديث الصورة الأولى
+        updateModalImage();
+    }
+
+    // --- عرض المودال ---
+    const modal = document.getElementById('propertyModal');
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    history.pushState({}, '', `${window.location.pathname}?id=${id}`);
+
+    // --- عرض المودال ---
+    document.getElementById('propertyModal').classList.add('active');
+    document.body.classList.add('modal-open');
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+
+    // ✅ أضف هذا السطر - يمنع تمرير محتوى المودال ككل
+    document.getElementById('propertyModal').style.overflow = 'hidden';
+    document.getElementById('propertyModal').style.height = '100vh';
+
     history.pushState({}, '', `${window.location.pathname}?id=${id}`);
 }
 
-// استبدل دالة updateModalImage الموجودة بهذه النسخة
 function updateModalImage() {
     const galleryMain = document.getElementById('galleryMain');
     const counter = document.getElementById('imageCounter');
+    const zoomBtn = document.getElementById('zoomBtn');
     
     if (!galleryMain) return;
     
-    // ✅ 1. حذف جميع عناصر الوسائط السابقة مع الاحتفاظ بأزرار التنقل والعداد
+    // 1. حذف جميع عناصر الوسائط السابقة
     const children = galleryMain.children;
     for (let i = children.length - 1; i >= 0; i--) {
         const child = children[i];
-        // احتفظ فقط بأزرار التنقل والعداد
-        if (!child.classList.contains('gallery-nav') && !child.classList.contains('image-counter')) {
-            child.remove();
+        if (child.id === 'zoomBtn' || 
+            child.id === 'zoomOverlay' || 
+            child.id === 'imageCounter' || 
+            child.classList.contains('gallery-nav')) {
+            continue;
         }
+        child.remove();
     }
     
-    // ✅ 2. التأكد من وجود أزرار التنقل
-    let galleryNav = galleryMain.querySelector('.gallery-nav');
-    if (!galleryNav) {
-        galleryNav = document.createElement('div');
-        galleryNav.className = 'gallery-nav';
-        galleryNav.innerHTML = `
-            <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
-                <i class="fas fa-chevron-right"></i>
-            </button>
-            <button class="gallery-nav-btn next" onclick="nextPropImg()" aria-label="التالي">
-                <i class="fas fa-chevron-left"></i>
-            </button>
-        `;
-        galleryMain.appendChild(galleryNav);
-    }
-    
-    // ✅ 3. التأكد من وجود عداد الصور
-    let imageCounter = galleryMain.querySelector('.image-counter');
+    // 2. التأكد من وجود العداد
+    let imageCounter = document.getElementById('imageCounter');
     if (!imageCounter) {
         imageCounter = document.createElement('div');
         imageCounter.className = 'image-counter';
@@ -1984,137 +2620,182 @@ function updateModalImage() {
         galleryMain.appendChild(imageCounter);
     }
     
-    // ✅ 4. إنشاء حاوية الوسائط الجديدة (بنفس الحجم دائماً)
-    const wrapper = document.createElement('div');
-    wrapper.className = 'media-wrapper';
-    // ✅ أنماط ثابتة للحاوية - تضمن نفس الحجم لجميع الصور
-    wrapper.style.cssText = `
-        width: 100% !important;
-        height: 100% !important;
-        min-height: 400px !important;
-        max-height: 600px !important;
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: #0a0a0a !important;
-        overflow: hidden !important;
-        position: relative !important;
-    `;
+    // 3. التأكد من وجود زر التكبير
+    let zoomButton = document.getElementById('zoomBtn');
+    if (!zoomButton) {
+        zoomButton = document.createElement('button');
+        zoomButton.className = 'zoom-btn';
+        zoomButton.id = 'zoomBtn';
+        zoomButton.innerHTML = '<i class="fas fa-expand"></i>';
+        zoomButton.title = 'تكبير الصورة';
+        zoomButton.onclick = openZoom;
+        galleryMain.insertBefore(zoomButton, galleryMain.firstChild);
+    }
     
-    // ✅ 5. إضافة الحاوية قبل أزرار التنقل
-    galleryMain.insertBefore(wrapper, galleryNav);
-    
-    // ✅ 6. التحقق من وجود صور
+    // 4. التحقق من وجود صور
     if (currentPropertyImages && currentPropertyImages.length > 0 && currentPropertyImages[currentImageIndex]) {
         const mediaUrl = currentPropertyImages[currentImageIndex];
         const isVideo = isVideoUrl(mediaUrl);
         
+        // إظهار زر التكبير
+        if (zoomButton) zoomButton.style.display = 'flex';
+        
+        // إنشاء وعرض الوسائط
+        const wrapper = document.createElement('div');
+        wrapper.className = 'media-wrapper';
+        wrapper.style.cssText = 'width:100%;height:100%;min-height:400px;max-height:600px;display:flex;align-items:center;justify-content:center;background:#0a0a0a;overflow:hidden;';
+        
         if (isVideo) {
-            // ✅ معالجة الفيديو
             const video = document.createElement('video');
             video.src = mediaUrl;
             video.controls = true;
-            video.autoplay = false;
             video.muted = false;
             video.playsinline = true;
             video.preload = 'metadata';
-            video.style.cssText = `
-                width: 100% !important;
-                height: 100% !important;
-                max-width: 100% !important;
-                max-height: 100% !important;
-                object-fit: contain !important;
-                display: block !important;
-                background: #000 !important;
-            `;
+            video.style.cssText = 'width:100%;height:100%;object-fit:contain;background:#000;';
             wrapper.appendChild(video);
         } else {
-            // ✅ معالجة الصورة - تطبيق أنماط موحدة لجميع الصور
             const img = document.createElement('img');
             img.src = mediaUrl;
             img.alt = 'صورة العقار';
             img.loading = 'lazy';
-            // ✅ أنماط ثابتة لجميع الصور - تضمن عرضها بالحجم الكامل
-            img.style.cssText = `
-                width: auto !important;
-                height: auto !important;
-                max-width: 95% !important;
-                max-height: 95% !important;
-                object-fit: contain !important;
-                display: block !important;
-                background: #0a0a0a !important;
-                border-radius: 4px !important;
-                box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
-                transition: none !important;
-            `;
-            
-            // ✅ عند تحميل الصورة، تأكد من أن الأنماط صحيحة
-            img.onload = function() {
-                // إعادة تطبيق الأنماط للتأكد من عدم تغييرها
-                this.style.cssText = `
-                    width: auto !important;
-                    height: auto !important;
-                    max-width: 95% !important;
-                    max-height: 95% !important;
-                    object-fit: contain !important;
-                    display: block !important;
-                    background: #0a0a0a !important;
-                    border-radius: 4px !important;
-                    box-shadow: 0 2px 20px rgba(0,0,0,0.3) !important;
-                    transition: none !important;
-                `;
-            };
-            
-            // ✅ في حالة فشل تحميل الصورة
+            img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;background:#0a0a0a;';
             img.onerror = function() {
                 this.src = DEFAULT_IMAGE;
                 this.alt = 'الصورة غير متوفرة';
-                this.style.cssText = `
-                    width: auto !important;
-                    height: auto !important;
-                    max-width: 60% !important;
-                    max-height: 60% !important;
-                    object-fit: contain !important;
-                    display: block !important;
-                    opacity: 0.5 !important;
-                `;
             };
-            
             wrapper.appendChild(img);
         }
         
-        // ✅ 7. تحديث العداد
+        // إضافة الوسائط قبل زر التكبير
+        galleryMain.insertBefore(wrapper, zoomButton);
+        
+        // تحديث العداد
         if (imageCounter) {
             imageCounter.textContent = `${currentImageIndex + 1}/${currentPropertyImages.length}`;
             imageCounter.style.display = 'block';
         }
         
-        // ✅ 8. إظهار أزرار التنقل
-        galleryNav.style.display = 'flex';
-        
     } else {
-        // ✅ 9. عرض الصورة الافتراضية (عند عدم وجود صور)
+        // لا توجد صور
+        if (zoomButton) zoomButton.style.display = 'none';
+        
+        const wrapper = document.createElement('div');
+        wrapper.className = 'media-wrapper';
+        wrapper.style.cssText = 'width:100%;height:100%;min-height:400px;max-height:600px;display:flex;align-items:center;justify-content:center;background:#0a0a0a;overflow:hidden;';
+        
         const img = document.createElement('img');
         img.src = DEFAULT_IMAGE;
         img.alt = 'صورة افتراضية';
-        img.style.cssText = `
-            width: auto !important;
-            height: auto !important;
-            max-width: 60% !important;
-            max-height: 60% !important;
-            object-fit: contain !important;
-            display: block !important;
-            opacity: 0.4 !important;
-        `;
+        img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;opacity:0.4;';
         wrapper.appendChild(img);
+        
+        galleryMain.insertBefore(wrapper, zoomButton);
         
         if (imageCounter) {
             imageCounter.textContent = '0/0';
             imageCounter.style.display = 'none';
         }
-        
-        galleryNav.style.display = 'flex';
     }
+}
+
+// ✅ فتح الصورة في نافذة جديدة - طريقة مباشرة
+function openZoom() {
+    let imageUrl = null;
+    
+    // 1. البحث عن الصورة في media-wrapper
+    const galleryMain = document.getElementById('galleryMain');
+    if (galleryMain) {
+        const mediaWrapper = galleryMain.querySelector('.media-wrapper');
+        if (mediaWrapper) {
+            const img = mediaWrapper.querySelector('img');
+            if (img && img.src) {
+                imageUrl = img.src;
+            }
+        }
+        
+        // 2. إذا لم نجد، ابحث عن أي صورة في galleryMain
+        if (!imageUrl) {
+            const img = galleryMain.querySelector('img:not(.zoom-btn):not(.gallery-nav-btn)');
+            if (img && img.src) {
+                imageUrl = img.src;
+            }
+        }
+    }
+    
+    // 3. إذا لم نجد، استخدم currentPropertyImages
+    if (!imageUrl && currentPropertyImages && currentPropertyImages.length > 0) {
+        imageUrl = currentPropertyImages[currentImageIndex] || currentPropertyImages[0];
+    }
+    
+    // 4. إذا لم نجد، استخدم الصورة الافتراضية
+    if (!imageUrl) {
+        imageUrl = DEFAULT_IMAGE;
+    }
+    
+    // ✅ فتح الصورة في نافذة جديدة
+    if (imageUrl) {
+        window.open(imageUrl, '_blank');
+    } else {
+        showToast('❌ لا توجد صورة لعرضها', 'error');
+    }
+}
+
+// ✅ إغلاق نافذة التكبير - نسخة محسنة
+function closeZoom() {
+    console.log('🔄 إغلاق نافذة التكبير');
+    
+    const zoomOverlay = document.getElementById('zoomOverlay');
+    const zoomVideo = document.getElementById('zoomVideo');
+    const zoomCloseBtn = document.getElementById('zoomCloseBtn');
+    
+    if (!zoomOverlay) return;
+    
+    zoomOverlay.classList.remove('active');
+    if (zoomCloseBtn) {
+        zoomCloseBtn.style.display = 'none';
+    }
+    document.body.style.overflow = '';
+    
+    // إيقاف الفيديو
+    if (zoomVideo) {
+        zoomVideo.pause();
+    }
+    console.log('✅ نافذة التكبير مغلقة');
+}
+
+// ✅ إغلاق التكبير بالضغط على Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeZoom();
+    }
+});
+
+// ✅ تحميل وتشغيل الفيديو في المودال عند الضغط على زر التشغيل
+// ✅ تحميل وتشغيل الفيديو في المودال
+function loadAndPlayModalVideo(wrapper, videoSrc) {
+    if (wrapper.dataset.loading === 'true') return;
+    wrapper.dataset.loading = 'true';
+    
+    const poster = wrapper.querySelector('.video-poster');
+    const overlay = wrapper.querySelector('.video-play-overlay');
+    const video = wrapper.querySelector('.card-main-video');
+    
+    if (!video) return;
+    
+    video.style.display = 'block';
+    if (poster) poster.style.display = 'none';
+    if (overlay) overlay.style.display = 'none';
+    
+    video.load();
+    video.play().catch(function(error) {
+        console.log('تشغيل الفيديو تطلب تفاعل المستخدم:', error);
+        video.addEventListener('click', function() {
+            video.play();
+        }, { once: true });
+    });
+    
+    wrapper.dataset.loading = 'false';
 }
 
 // ✅ دالة مساعدة لعرض الصورة الافتراضية
@@ -2169,8 +2850,15 @@ function prevPropImg() {
 }
 
 function closePropertyModal() {
-    document.getElementById('propertyModal').classList.remove('active');
+    const modal = document.getElementById('propertyModal');
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
+    document.body.style.position = '';
+    document.body.style.width = '';
+    document.body.style.height = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
 }
 
 
@@ -2478,20 +3166,71 @@ if (heroClearBtn) {
 // ============================================================
 
 function getRentPeriodText(period) {
+    // تحويل القيمة إلى حروف صغيرة للمقارنة
+    const p = String(period || '').toLowerCase().trim();
+    
     if (currentLanguage === 'ar') {
-        switch(period) {
-            case 'month': return 'شهرياً';
-            case 'year': return 'سنوياً';
-            case 'week': return 'أسبوعياً';
-            default: return 'شهرياً';
+        switch(p) {
+            case 'month':
+            case 'monthly':
+                return 'شهرياً';
+            case 'year':
+            case 'yearly':
+                return 'سنوياً';
+            case 'week':
+            case 'weekly':
+                return 'أسبوعياً';
+            case 'day':
+            case 'daily':
+                return 'يومياً';
+            default:
+                return 'شهرياً';
         }
     } else {
-        switch(period) {
-            case 'month': return 'per month';
-            case 'year': return 'per year';
-            case 'week': return 'per week';
-            default: return 'per month';
+        switch(p) {
+            case 'month':
+            case 'monthly':
+                return 'per month';
+            case 'year':
+            case 'yearly':
+                return 'per year';
+            case 'week':
+            case 'weekly':
+                return 'per week';
+            case 'day':
+            case 'daily':
+                return 'per day';
+            default:
+                return 'per month';
         }
+    }
+}
+
+// دالة للحصول على نص الطابق مترجماً
+function getFloorText(floor) {
+    // تحويل إلى رقم إذا كان نصاً
+    const floorNum = typeof floor === 'string' ? parseInt(floor) : floor;
+    
+    // التحقق من أن القيمة رقم صحيح
+    if (isNaN(floorNum)) {
+        return floor || '—';
+    }
+    
+    if (currentLanguage === 'ar') {
+        if (floorNum === -2) return 'قبو ثاني';
+        if (floorNum === -1) return 'قبو أول';
+        if (floorNum === 0) return 'أرضي';
+        return floorNum;
+    } else {
+        if (floorNum === -2) return 'Basement 2';
+        if (floorNum === -1) return 'Basement 1';
+        if (floorNum === 0) return 'Ground';
+        // تحويل الأرقام الإنجليزية إلى نص ترتيبي
+        if (floorNum === 1) return '1st';
+        if (floorNum === 2) return '2nd';
+        if (floorNum === 3) return '3rd';
+        if (floorNum >= 4) return floorNum + 'th';
+        return floorNum;
     }
 }
 
@@ -2500,7 +3239,8 @@ function getLocalizedText(property, field) {
     if (lang === 'ar') {
         return property[field + '_ar'] || property[field] || '';
     } else {
-        return property[field + '_en'] || property[field] || '';
+        // إذا لم توجد الترجمة الإنجليزية، استخدم العربية
+        return property[field + '_en'] || property[field] || property[field + '_ar'] || '';
     }
 }
 
@@ -2582,13 +3322,16 @@ function toggleHideSold() {
 
 function openPrivacyModal() {
     const modal = document.getElementById('privacyModal');
-    if (modal) modal.classList.add('active');
-    document.body.style.overflow = 'hidden';
+    if (modal) {
+        modal.classList.add('active');
+        document.body.classList.add('modal-open');
+        document.body.style.overflow = 'hidden';
+    }
 }
 
 function closePrivacyModal() {
-    const modal = document.getElementById('privacyModal');
-    if (modal) modal.classList.remove('active');
+    document.getElementById('privacyModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
     document.body.style.overflow = '';
 }
 
@@ -2683,10 +3426,16 @@ async function loadProperties() {
                 console.log(`${p.id}: price=${p.price}, isPriceNumeric=${p.isPriceNumeric}, type=${p.type}`);
             });
             
+            // ترتيب العقارات: المميزة أولاً، ثم حسب تاريخ الإضافة (الأجدد أولاً)
             allProperties.sort((a, b) => {
+                // أولاً: العقارات المميزة تظهر في الأعلى
                 if (a.featured === 'yes' && b.featured !== 'yes') return -1;
                 if (a.featured !== 'yes' && b.featured === 'yes') return 1;
-                return 0;
+                
+                // ثانياً: ترتيب حسب تاريخ الإضافة (الأجدد أولاً)
+                const dateA = a.added_date ? new Date(a.added_date).getTime() : 0;
+                const dateB = b.added_date ? new Date(b.added_date).getTime() : 0;
+                return dateB - dateA; // الأحدث أولاً
             });
             
             localStorage.setItem('kh_properties', JSON.stringify(allProperties));
@@ -2951,6 +3700,58 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ============================================================
+// منع تمرير الصفحة عند فتح المودال
+// ============================================================
+
+// مراقبة فتح وإغلاق المودال
+const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+        if (mutation.attributeName === 'class') {
+            const modal = mutation.target;
+            if (modal.classList.contains('active')) {
+                document.body.classList.add('modal-open');
+            } else {
+                document.body.classList.remove('modal-open');
+            }
+        }
+    });
+});
+
+document.querySelectorAll('.modal-overlay').forEach(function(modal) {
+    observer.observe(modal, { attributes: true });
+});
+
+// عند الضغط على ESC إغلاق جميع المودالات
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(function(modal) {
+            modal.classList.remove('active');
+        });
+        document.body.classList.remove('modal-open');
+    }
+});
+
+// مراقبة جميع المودالات
+document.querySelectorAll('.modal-overlay').forEach(function(modal) {
+    observer.observe(modal, { attributes: true });
+});
+
+// تأكد من إزالة الـ class عند الإغلاق يدوياً
+function closeAllModals() {
+    document.querySelectorAll('.modal-overlay.active').forEach(function(modal) {
+        modal.classList.remove('active');
+    });
+    document.body.classList.remove('modal-open');
+}
+
+// عند الضغط على ESC إغلاق جميع المودالات وإزالة المنع
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAllModals();
+    }
+});
+
+// ============================================================
 // نسخ رقم واتساب بعد تسجيل العميل
 // ============================================================
 
@@ -2991,17 +3792,16 @@ function openAddPropertyModal() {
     const modal = document.getElementById('addPropertyModal');
     if (modal) {
         modal.classList.add('active');
+        document.body.classList.add('modal-open');
         document.body.style.overflow = 'hidden';
     }
 }
 
 // إغلاق نموذج إضافة العقار
 function closeAddPropertyModal() {
-    const modal = document.getElementById('addPropertyModal');
-    if (modal) {
-        modal.classList.remove('active');
-        document.body.style.overflow = '';
-    }
+    document.getElementById('addPropertyModal').classList.remove('active');
+    document.body.classList.remove('modal-open');
+    document.body.style.overflow = '';
 }
 
 // ============================================================

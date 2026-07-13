@@ -12,14 +12,14 @@
         <!-- ===== Open Graph Meta Tags ===== -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://king-properties.pages.dev/">
-        <meta property="og:image" content="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
+        <meta property="og:image" content="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
         <meta property="og:image:width" content="1200">
         <meta property="og:image:height" content="630">
         <meta property="og:image:alt" content="عقارات الملك - العقارات الفاخرة في سوريا | King Properties - Luxury Real Estate in Syria">
         
         <!-- Twitter Card -->
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
+        <meta name="twitter:image" content="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png">
         
         <!-- سيتم تحديث هذه القيم بواسطة JavaScript -->
         <meta name="description" id="metaDescription" content="عقارات الملك - دليلك الموثوق لشراء وتأجير العقارات في سوريا">
@@ -43,9 +43,11 @@
 <!-- ===== PRELOADER ===== -->
 <div id="preloader">
     <div class="preloader-content">
-        <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="preloader-logo">
-        <div class="preloader-text">King Properties</div>
-        <div class="preloader-dots"><span></span><span></span><span></span></div>
+        <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="preloader-logo">
+        <!-- تم إزالة كلمة "King Properties" -->
+        <div class="preloader-dots">
+            <span></span><span></span><span></span><span></span><span></span>
+        </div>
     </div>
 </div>
 
@@ -54,7 +56,7 @@
     <div class="container">
         <div class="header-wrapper">
             <a href="#" class="logo">
-                <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
+                <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
                 <div class="logo-text">
                     <span class="logo-ar">عقارات الملك</span>
                     <span class="logo-en">KING PROPERTIES</span>
@@ -253,7 +255,7 @@
         <div class="footer-grid">
             <div class="footer-about">
                 <div class="footer-logo">
-                    <img src="https://res.cloudinary.com/dkdilpnuc/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
+                    <img src="https://res.cloudinary.com/kingsomoza/image/upload/v1783195143/king-propertis-logo-removebg-preview_t5hses.png" alt="عقارات الملك" class="logo-img">
                     <div>
                         <span class="logo-ar">عقارات الملك</span>
                         <span class="logo-en">KING PROPERTIES</span>
@@ -401,12 +403,12 @@
             <button class="modal-close" onclick="closePropertyModal()">✕</button>
         </div>
         <div class="modal-body property-detail-body">
-            <div class="property-gallery">
+            <!-- ✅ المعرض - ثابت في الأعلى -->
+            <div class="property-gallery" id="propertyGallery">
                 <div class="gallery-main" id="galleryMain">
-                    <!-- ✅ تم إزالة <img> الثابت واستبداله بعناصر ديناميكية -->
-                    <!-- ✅ سيتم إضافة الصور/الفيديو هنا بواسطة JavaScript -->
-                    
-                    <!-- ✅ أزرار التنقل - تظهر دائماً -->
+                    <button class="zoom-btn" id="zoomBtn" title="فتح الصورة بحجم كامل" onclick="openZoom()">
+                        <i class="fas fa-expand"></i>
+                    </button>
                     <div class="gallery-nav">
                         <button class="gallery-nav-btn prev" onclick="prevPropImg()" aria-label="السابق">
                             <i class="fas fa-chevron-right"></i>
@@ -415,52 +417,90 @@
                             <i class="fas fa-chevron-left"></i>
                         </button>
                     </div>
-                    
-                    <!-- ✅ عداد الصور -->
                     <div class="image-counter" id="imageCounter">0/0</div>
                 </div>
-                <div class="gallery-thumbs" id="galleryThumbs"></div>
             </div>
-            <div class="property-info">
+            
+            <!-- ✅ المعلومات - قابلة للتمرير -->
+            <div class="property-info" id="propertyInfo">
+                <!-- صف العنوان والموقع والكود -->
                 <div class="property-header">
-                    <div>
+                    <div class="property-title-section">
                         <h2 id="propModalName">العنوان</h2>
-                        <p class="property-code" id="propModalCode">كود: --</p>
+                        <div class="property-meta-row">
+                            <span class="meta-badge" id="propModalType">--</span>
+                            <span class="meta-badge location-badge">
+                                <i class="fas fa-map-marker-alt"></i> 
+                                <span id="propModalLocation">--</span>
+                            </span>
+                            <span class="meta-badge code-badge">
+                                <i class="fas fa-barcode"></i> 
+                                <span id="propModalCodeSmall">--</span>
+                            </span>
+                        </div>
                     </div>
-                    <div class="property-price-box">
-                        <div class="property-price" id="propModalPrice">--</div>
-                        <div class="property-views" id="propModalViews">
-                            <i class="fas fa-eye"></i> <span id="viewsCount">0</span> مشاهدة
+                    <div class="property-stats-mini">
+                        <div class="stat-mini">
+                            <i class="fas fa-eye"></i>
+                            <span id="propModalViewsCount">0</span>
+                        </div>
+                        <div class="stat-mini">
+                            <i class="fas fa-heart"></i>
+                            <span id="propModalFavCount">0</span>
                         </div>
                     </div>
                 </div>
-                <div class="property-meta">
-                    <span class="meta-badge" id="propModalType">--</span>
-                    <span class="meta-badge"><i class="fas fa-map-marker-alt"></i> <span id="propModalLocation">--</span></span>
+            
+                <!-- صف السعر الذهبي -->
+                <div class="property-price-gold">
+                    <div class="price-gold-content">
+                        <span class="price-gold-label" id="propModalTypeLabel">للبيع</span>
+                        <span class="price-gold-value" id="propModalPrice">--</span>
+                        <span class="price-gold-currency" id="propModalCurrency">$</span>
+                        <span class="price-gold-period" id="propModalPriceExtra"></span>
+                    </div>
                 </div>
-                <div class="property-description"><h4>الوصف</h4><p id="propModalDesc">--</p></div>
-                <div class="property-specs"><h4>المواصفات</h4><div class="specs-grid" id="propModalSpecs"></div></div>
-                <div class="property-map"><h4>الموقع على الخريطة</h4><div id="propModalMap" class="map-container"></div></div>
-                <div class="property-suggestions"><h4>عقارات مشابهة</h4><div class="suggestions-grid" id="propSuggestions"></div></div>
+            
+                <!-- باقي المحتوى -->
+                <div class="property-description">
+                    <h4><i class="fas fa-align-left"></i> <span data-i18n="property_description_title">الوصف</span></h4>
+                    <p id="propModalDesc">--</p>
+                </div>
+            
+                <div class="property-specs">
+                    <h4><i class="fas fa-list-ul"></i> <span data-i18n="property_specs_title">المواصفات</span></h4>
+                    <div class="specs-grid" id="propModalSpecs"></div>
+                </div>
+            
+                <div class="property-map">
+                    <h4><i class="fas fa-map-marked-alt"></i> <span data-i18n="property_map_title">الموقع على الخريطة</span></h4>
+                    <div id="propModalMap" class="map-container"></div>
+                </div>
+            
+                <div class="property-suggestions">
+                    <h4><i class="fas fa-building"></i> <span data-i18n="property_similar_title">عقارات مشابهة</span></h4>
+                    <div class="suggestions-grid" id="propSuggestions"></div>
+                </div>
+            
                 <div class="property-actions">
                     <button class="action-btn contact" onclick="contactFromProperty()">
-                        <i class="fab fa-whatsapp"></i><span>تواصل بخصوص هذا العقار</span>
+                        <i class="fab fa-whatsapp"></i><span data-i18n="property_contact_btn">تواصل بخصوص هذا العقار</span>
                     </button>
                     <button class="action-btn share" onclick="shareFromModal()">
-                        <i class="fas fa-share-alt"></i> <span>مشاركة العقار</span>
+                        <i class="fas fa-share-alt"></i> <span data-i18n="property_share_btn">مشاركة</span>
                     </button>
                     <button class="action-btn favorite" onclick="toggleFavoriteFromModal()">
-                        <i class="far fa-heart"></i> <span>إضافة للمفضلة</span>
-                        <span id="modalFavCount" style="display: none;"></span>
+                        <i class="far fa-heart"></i> <span data-i18n="property_favorite_btn">المفضلة</span>
                     </button>
                     <button class="action-btn copy-link" onclick="copyPropertyLink()">
-                        <i class="fas fa-link"></i> <span>نسخ الرابط</span>
+                        <i class="fas fa-link"></i> <span data-i18n="property_copy_link_btn">نسخ الرابط</span>
                     </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- ===== PRIVACY LINK ===== -->
 <div class="footer-privacy">
