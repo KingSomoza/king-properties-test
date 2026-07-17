@@ -584,6 +584,58 @@ async function deleteUser(id) {
   }
 }
 
+function createAdminForce() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName("Users");
+  
+  if (!sheet) {
+    sheet = ss.insertSheet("Users");
+    sheet.appendRow(["ID", "Username", "Password", "Salt", "Role", "Permissions", "Created At", "Last Login"]);
+    console.log('✅ تم إنشاء ورقة Users');
+  }
+  
+  // حذف أي حساب admin موجود
+  const data = sheet.getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (data[i][1] === 'admin') {
+      sheet.deleteRow(i + 1);
+      console.log('🗑️ تم حذف حساب admin القديم');
+    }
+  }
+  
+  const salt = "fixed_salt_2024";
+  const password = "ChangeMe123!";
+  
+  const raw = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    salt + password,
+    Utilities.Charset.UTF_8
+  );
+  const passwordHash = raw.map(b => (b < 0 ? b + 256 : b).toString(16).padStart(2, '0')).join('');
+  
+  sheet.appendRow([
+    'U-' + Utilities.getUuid().split('-')[0],
+    'admin',
+    passwordHash,
+    salt,
+    'full_access',
+    '',
+    new Date().toISOString(),
+    ''
+  ]);
+  
+  console.log('✅ تم إنشاء حساب admin!');
+  console.log('👤 Username: admin');
+  console.log('🔑 Password: ChangeMe123!');
+  
+  // عرض البيانات للتأكد
+  const newData = sheet.getDataRange().getValues();
+  console.log('📊 عدد المستخدمين الآن:', newData.length - 1);
+  for (let i = 1; i < newData.length; i++) {
+    console.log(`  ${i}. ${newData[i][1]} | ${newData[i][4]}`);
+  }
+}
+
 /* ============================================================
    الإعدادات
    ============================================================ */
